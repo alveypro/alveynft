@@ -2,9 +2,10 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract AlveyNFT is ERC721, Ownable {
+contract AlveyNFT is ERC721, ERC721URIStorage, Ownable {
     uint256 private _tokenIdCounter;
     uint256 public constant MINT_PRICE = 0.01 ether;
     uint256 public constant MAX_MINTS_PER_WALLET = 3;
@@ -24,6 +25,14 @@ contract AlveyNFT is ERC721, Ownable {
         _setTokenURI(tokenId, tokenURI);
         
         mintedWallets[msg.sender]++;
+    }
+
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        return super.tokenURI(tokenId);
+    }
+
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
     }
 
     function withdraw() public onlyOwner {

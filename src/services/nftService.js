@@ -1,84 +1,80 @@
 import { getContract } from 'viem'
 import { useContractWrite, useContractRead } from 'wagmi'
 
-// 已部署的NFT合约地址
-const NFT_CONTRACT_ADDRESS = process.env.VITE_CONTRACT_ADDRESS
-
-// 合约 ABI
-const NFT_ABI = [
-  {
-    "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "tokenURI",
-        "type": "string"
-      }
-    ],
-    "name": "mint",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "mintPrice",
-    "outputs": [
-      {
+// NFT合约配置
+export const NFT_CONFIG = {
+  address: process.env.VITE_CONTRACT_ADDRESS,
+  abi: [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "tokenURI",
+          "type": "string"
+        }
+      ],
+      "name": "mint",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "mintPrice",
+      "outputs": [{
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
+      }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [{
         "internalType": "address",
         "name": "",
         "type": "address"
-      }
-    ],
-    "name": "mintedWallets",
-    "outputs": [
-      {
+      }],
+      "name": "mintedWallets",
+      "outputs": [{
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  }
-]
-
-export function useNFTMint() {
-  return useContractWrite({
-    address: NFT_CONTRACT_ADDRESS,
-    abi: NFT_ABI,
-    functionName: 'mint'
-  })
+      }],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
 }
 
+// 合约读取hooks
 export function useNFTMintPrice() {
   return useContractRead({
-    address: NFT_CONTRACT_ADDRESS,
-    abi: NFT_ABI,
-    functionName: 'mintPrice'
+    ...NFT_CONFIG,
+    functionName: 'mintPrice',
+    watch: true
   })
 }
 
 export function useNFTMintedCount(address) {
   return useContractRead({
-    address: NFT_CONTRACT_ADDRESS,
-    abi: NFT_ABI,
+    ...NFT_CONFIG,
     functionName: 'mintedWallets',
-    args: [address]
+    args: [address],
+    watch: true,
+    enabled: Boolean(address)
+  })
+}
+
+// 合约写入hooks
+export function useNFTMint() {
+  return useContractWrite({
+    ...NFT_CONFIG,
+    functionName: 'mint'
   })
 }

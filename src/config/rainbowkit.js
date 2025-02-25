@@ -1,9 +1,14 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit'
+import { createConfig } from 'wagmi'
+import { getDefaultWallets } from '@rainbow-me/rainbowkit'
 import { alveyChainConfig } from './networks'
 
-export const wagmiConfig = getDefaultConfig({
+const { connectors } = getDefaultWallets({
   appName: 'AlveyChain NFT Platform',
-  projectId: process.env.VITE_WALLET_CONNECT_PROJECT_ID || 'YOUR_PROJECT_ID',
-  chains: [alveyChainConfig],
+  projectId: import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID,
+  chains: [alveyChainConfig]
+})
+
+export const wagmiConfig = createConfig({
+  connectors,
   ssr: true
 })
