@@ -1,0 +1,54 @@
+/* 移动端适配样式 */
+@media screen and (max-width: 768px) {
+  .app-container {
+    padding: 1rem;
+  }
+
+  .app-header {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+
+  .app-title {
+    font-size: 1.5rem;
+  }
+
+  .welcome-section {
+    padding: 1.5rem 1rem;
+  }
+
+  .welcome-title {
+    font-size: 1.25rem;
+  }
+
+  .mint-container {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .mint-title {
+    font-size: 1.2rem;
+  }
+
+  .mint-info {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .info-item {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mint-button {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+  }
+
+  .message {
+    margin-top: 0.8rem;
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,101 @@
+.mint-container {
+  padding: 20px;
+  max-width: 100%;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.mint-title {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.mint-info {
+  margin-bottom: 24px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.info-label {
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.info-value {
+  color: #00ff88;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.mint-button {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #00ff88 0%, #00b8ff 100%);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mint-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mint-button.loading {
+  background: #666;
+}
+
+.message {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.success-message {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+}
+
+.error-message {
+  background: rgba(255, 0, 0, 0.1);
+  color: #ff0000;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 768px) {
+  .mint-container {
+    padding: 15px;
+    margin: 10px;
+  }
+
+  .mint-title {
+    font-size: 20px;
+  }
+
+  .info-label,
+  .info-value {
+    font-size: 14px;
+  }
+
+  .mint-button {
+    padding: 12px;
+    font-size: 16px;
+  }
+}
