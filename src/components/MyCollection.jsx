@@ -3,6 +3,7 @@ import { useAccount, usePublicClient } from 'wagmi'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
 import { NFT_CONFIG, useNFTTransfer } from '../services/nftService'
 import { toGatewayUrl } from '../services/ipfsService'
+import { DEFAULT_NFT_IMAGE } from '../services/defaults'
 import { getTokenExplorerUrl } from '../services/explorer'
 import './MyCollection.css'
 
@@ -74,7 +75,7 @@ export function MyCollection() {
           tokenId,
           tokenTier: Number(tokenTier) + 1,
           name: metadata?.name ?? `Token #${tokenId}`,
-          image: toGatewayUrl(metadata?.image || metadata?.image_url),
+          image: metadata?.image || metadata?.image_url ? toGatewayUrl(metadata?.image || metadata?.image_url) : DEFAULT_NFT_IMAGE,
           tokenURI
         })
       } catch {
@@ -82,7 +83,7 @@ export function MyCollection() {
           tokenId,
           tokenTier: null,
           name: `Token #${tokenId}`,
-          image: '',
+          image: DEFAULT_NFT_IMAGE,
           tokenURI: ''
         })
       }
@@ -157,7 +158,7 @@ export function MyCollection() {
         {items.map((item) => (
           <div key={item.tokenId} className="collection-item">
             <div className="collection-image">
-              {item.image ? <img src={item.image} alt={item.name} /> : <span>暂无图片</span>}
+              <img src={item.image || DEFAULT_NFT_IMAGE} alt={item.name} />
             </div>
             <div className="collection-info">
               <div className="collection-title">{item.name}</div>

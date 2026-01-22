@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
 import { useNFTTokenTier, useNFTTokenUri } from '../services/nftService'
 import { toGatewayUrl } from '../services/ipfsService'
+import { DEFAULT_NFT_IMAGE } from '../services/defaults'
 import './ExploreNFT.css'
 
 export function ExploreNFT() {
@@ -75,9 +76,10 @@ export function ExploreNFT() {
           )}
           {metadata && (
             <div className="explore-preview">
-              {metadata.image && (
-                <img src={toGatewayUrl(metadata.image)} alt={metadata.name || 'NFT'} />
-              )}
+              <img
+                src={metadata.image ? toGatewayUrl(metadata.image) : DEFAULT_NFT_IMAGE}
+                alt={metadata.name || 'NFT'}
+              />
               <div className="explore-meta">
                 <div>{metadata.name}</div>
                 <div className="explore-desc">{metadata.description}</div>

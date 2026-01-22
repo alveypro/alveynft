@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useAccount, usePublicClient } from 'wagmi'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
+import { NFT_CONFIG } from '../services/nftService'
+import { toGatewayUrl } from '../services/ipfsService'
+import { DEFAULT_NFT_IMAGE } from '../services/defaults'
 import './WalletTokens.css'
 
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
@@ -17,11 +20,31 @@ export function WalletTokens() {
   const [fromBlock, setFromBlock] = useState('0')
   const [toBlock, setToBlock] = useState('latest')
   const [isScanning, setIsScanning] = useState(false)
-  const [tokenIds, setTokenIds] = useState([])
+  const [tokenItems, setTokenItems] = useState([])
   const [scanError, setScanError] = useState('')
   const [scanInfo, setScanInfo] = useState('')
 
   const targetAddress = useMemo(() => normalizeAddress(address), [address])
+
+  const decodeDataUri = (uri) => {
+    const prefix = 'data:application/json;utf8,'
+    if (!uri.startsWith(prefix)) return null
+    try {
+      const json = decodeURIComponent(uri.slice(prefix.length))
+      return JSON.parse(json)
+    } catch {
+      return null
+    }
+  }
+
+  const fetchMetadata = async (uri) => {
+    if (!uri) return null
+    const data = decodeDataUri(uri)
+    if (data) return data
+    const response = await fetch(toGatewayUrl(uri))
+    if (!response.ok) return null
+    return response.json()
+  }
 
   const scanTransfers = async () => {
     if (!publicClient || !contractAddress || !targetAddress || !contractReady) return
@@ -104,9 +127,42 @@ export function WalletTokens() {
         currentFrom = rangeTo + 1n
       }
 
-      setTokenIds(Array.from(owned).map((id) => Number(id)).sort((a, b) => a - b))
+      const ownedIds = Array.from(owned).map((id) => Number(id)).sort((a, b) => a - b)
+      const nextItems = []
 
-      if (!owned.size) {
+      for (const tokenId of ownedIds) {
+        let name = `Token #${tokenId}`
+        let image = DEFAULT_NFT_IMAGE
+        let tierLabel = 'Tier -'
+        let tokenURI = ''
+        try {
+          tokenURI = await publicClient.readContract({
+            ...NFT_CONFIG,
+            address: contractAddress,
+            functionName: 'tokenURI',
+            args: [BigInt(tokenId)]
+          })
+          const tokenTier = await publicClient.readContract({
+            ...NFT_CONFIG,
+            address: contractAddress,
+            functionName: 'tokenTier',
+            args: [BigInt(tokenId)]
+          })
+          tierLabel = `Tier ${Number(tokenTier) + 1}`
+          const metadata = await fetchMetadata(tokenURI)
+          if (metadata?.name) name = metadata.name
+          if (metadata?.image || metadata?.image_url) {
+            image = toGatewayUrl(metadata?.image || metadata?.image_url)
+          }
+        } catch {
+          // ignore individual token failures
+        }
+        nextItems.push({ tokenId, name, image, tierLabel, tokenURI })
+      }
+
+      setTokenItems(nextItems)
+
+      if (!ownedIds.length) {
         setScanInfo('该区块范围内未发现 Token ID，可尝试填入合约部署区块。')
       }
     } catch (error) {
@@ -142,11 +198,19 @@ export function WalletTokens() {
       {scanInfo && <div className="message info-message">{scanInfo}</div>}
       {scanError && <div className="message error-message">{scanError}</div>}
       <div className="wallet-results">
-        {tokenIds.length ? (
-          tokenIds.map((id) => (
-            <span key={id} className="wallet-chip">
-              #{id}
-            </span>
+        {tokenItems.length ? (
+          tokenItems.map((item) => (
+            <div key={item.tokenId} className="wallet-item">
+              <div className="wallet-image">
+                <img src={item.image || DEFAULT_NFT_IMAGE} alt={item.name} />
+              </div>
+              <div className="wallet-info">
+                <div className="wallet-title">{item.name}</div>
+                <div className="wallet-meta">
+                  Token #{item.tokenId} · {item.tierLabel}
+                </div>
+              </div>
+            </div>
           ))
         ) : (
           <span>暂无结果</span>
