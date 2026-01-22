@@ -69,8 +69,9 @@
 .explore-preview img {
   width: 100%;
   max-height: 280px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 10px;
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .explore-meta {
