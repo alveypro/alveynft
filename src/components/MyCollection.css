@@ -78,3 +78,36 @@
   color: #00b8ff;
   text-decoration: none;
 }
+
+.collection-transfer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.collection-transfer input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.collection-transfer button {
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 255, 136, 0.2);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.collection-status {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+}

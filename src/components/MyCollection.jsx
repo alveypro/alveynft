@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import { usePublicClient } from 'wagmi'
+import { useAccount, usePublicClient } from 'wagmi'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
-import { NFT_CONFIG } from '../services/nftService'
+import { NFT_CONFIG, useNFTTransfer } from '../services/nftService'
 import { toGatewayUrl } from '../services/ipfsService'
 import './MyCollection.css'
 
@@ -27,13 +27,17 @@ async function fetchMetadata(uri) {
 }
 
 export function MyCollection() {
+  const { address } = useAccount()
   const publicClient = usePublicClient()
   const { address: contractAddress } = useContractAddress()
   const { hasCode: contractReady } = useContractStatus(contractAddress)
+  const { writeAsync: transferAsync, isLoading: isTransferring } = useNFTTransfer(contractAddress)
   const [startId, setStartId] = useState('0')
   const [endId, setEndId] = useState('20')
   const [items, setItems] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [transferTargets, setTransferTargets] = useState({})
+  const [transferStatus, setTransferStatus] = useState({})
 
   const range = useMemo(() => {
     const start = Number(startId)
@@ -86,6 +90,33 @@ export function MyCollection() {
     setIsLoading(false)
   }
 
+  const updateTarget = (tokenId, value) => {
+    setTransferTargets((prev) => ({ ...prev, [tokenId]: value }))
+  }
+
+  const updateStatus = (tokenId, status) => {
+    setTransferStatus((prev) => ({ ...prev, [tokenId]: status }))
+  }
+
+  const handleTransfer = async (tokenId) => {
+    if (!address || !contractAddress || !transferAsync) return
+    const target = transferTargets[tokenId]?.trim()
+    if (!target) {
+      updateStatus(tokenId, '请输入接收地址')
+      return
+    }
+
+    try {
+      updateStatus(tokenId, '转移中...')
+      await transferAsync({
+        args: [address, target, BigInt(tokenId)]
+      })
+      updateStatus(tokenId, '转移交易已提交')
+    } catch (error) {
+      updateStatus(tokenId, error?.shortMessage || error?.message || '转移失败')
+    }
+  }
+
   if (!contractAddress) return null
 
   return (
@@ -115,23 +146,41 @@ export function MyCollection() {
             <div className="collection-image">
               {item.image ? <img src={item.image} alt={item.name} /> : <span>暂无图片</span>}
             </div>
-          <div className="collection-info">
-            <div className="collection-title">{item.name}</div>
-            <div className="collection-meta">Token #{item.tokenId}</div>
-            {item.tokenTier && <div className="collection-meta">Tier {item.tokenTier}</div>}
-            {item.tokenURI && (
-              <a
-                className="collection-link"
-                href={toGatewayUrl(item.tokenURI)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                查看元数据
-              </a>
-            )}
+            <div className="collection-info">
+              <div className="collection-title">{item.name}</div>
+              <div className="collection-meta">Token #{item.tokenId}</div>
+              {item.tokenTier && <div className="collection-meta">Tier {item.tokenTier}</div>}
+              {item.tokenURI && (
+                <a
+                  className="collection-link"
+                  href={toGatewayUrl(item.tokenURI)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  查看元数据
+                </a>
+              )}
+              <div className="collection-transfer">
+                <input
+                  type="text"
+                  value={transferTargets[item.tokenId] ?? ''}
+                  onChange={(event) => updateTarget(item.tokenId, event.target.value)}
+                  placeholder="接收地址 0x..."
+                />
+                <button
+                  type="button"
+                  onClick={() => handleTransfer(item.tokenId)}
+                  disabled={!address || isTransferring || !contractReady}
+                >
+                  {isTransferring ? '处理中...' : '转移'}
+                </button>
+              </div>
+              {transferStatus[item.tokenId] && (
+                <div className="collection-status">{transferStatus[item.tokenId]}</div>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
       </div>
     </section>
   )

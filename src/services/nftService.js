@@ -296,6 +296,24 @@ export const NFT_CONFIG = {
       "type": "function"
     },
     {
+      "inputs": [
+        { "internalType": "address", "name": "from", "type": "address" },
+        { "internalType": "address", "name": "to", "type": "address" },
+        { "internalType": "uint256", "name": "tokenId", "type": "uint256" }
+      ],
+      "name": "safeTransferFrom",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
+      "name": "ownerOf",
+      "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [{
         "internalType": "address",
         "name": "",
@@ -569,5 +587,13 @@ export function useNFTTransferOwnership(contractAddress) {
     ...NFT_CONFIG,
     address: contractAddress,
     functionName: 'transferOwnership'
+  })
+}
+
+export function useNFTTransfer(contractAddress) {
+  return useContractWrite({
+    ...NFT_CONFIG,
+    address: contractAddress,
+    functionName: 'safeTransferFrom'
   })
 }
