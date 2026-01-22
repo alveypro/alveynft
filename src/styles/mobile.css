@@ -20,8 +20,9 @@
     padding-block: 1rem;
     position: sticky;
     top: 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(8, 12, 18, 0.92);
     backdrop-filter: blur(10px);
+    z-index: 10;
   }
 
   [class*='-section'] {
@@ -77,7 +78,55 @@
     flex-direction: column;
   }
 
+  .section-tabs button {
+    width: 100%;
+    text-align: center;
+  }
+
   .contract-status {
+    grid-template-columns: 1fr;
+  }
+
+  .contract-status button {
+    width: 100%;
+  }
+
+  .gateway-select select {
+    width: 100%;
+  }
+
+  .market-address {
+    grid-template-columns: 1fr;
+  }
+
+  .market-address button {
+    width: 100%;
+  }
+
+  .market-actions,
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .market-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .market-actions-inline {
+    grid-template-columns: 1fr;
+  }
+
+  .market-actions-inline input,
+  .market-actions-inline button {
+    width: 100%;
+  }
+
+  .wallet-results {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-transfer {
     grid-template-columns: 1fr;
   }
 }
