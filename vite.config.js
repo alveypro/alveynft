@@ -24,7 +24,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    minify: 'terser',
+    minify: 'esbuild',
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1600,
     manifest: true,
