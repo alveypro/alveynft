@@ -76,4 +76,8 @@
   .section-tabs {
     flex-direction: column;
   }
+
+  .contract-status {
+    grid-template-columns: 1fr;
+  }
 }

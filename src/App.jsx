@@ -55,6 +55,24 @@ function App() {
             <span>Prestige / 品牌</span>
           </div>
         </div>
+        <div className="contract-status">
+          <div>
+            <span>Contract</span>
+            <span>{contractAddress || '未设置'}</span>
+          </div>
+          <div className={contractReady ? 'ready' : 'not-ready'}>
+            {contractReady ? '已检测到合约' : '未检测到合约'}
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem('alvey.contractAddress')
+              window.location.reload()
+            }}
+          >
+            Reset Cache
+          </button>
+        </div>
         <div className="section-tabs">
           <button
             className={activeTab === 'mint' ? 'active' : ''}
