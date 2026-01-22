@@ -67,6 +67,7 @@ export function Marketplace() {
   const [auctionReserve, setAuctionReserve] = useState('')
   const [auctionDuration, setAuctionDuration] = useState('24')
   const [bidValues, setBidValues] = useState({})
+  const hasEnvMarket = Boolean(import.meta.env.VITE_MARKET_ADDRESS)
 
   useEffect(() => {
     setMarketInput(marketAddress || '')
@@ -233,13 +234,22 @@ export function Marketplace() {
       </div>
 
       <div className="market-address">
-        <input
-          type="text"
-          value={marketInput}
-          onChange={(event) => setMarketInput(event.target.value)}
-          placeholder="市场合约地址 (0x...)"
-        />
-        <button onClick={handleSaveMarket}>保存</button>
+        {hasEnvMarket ? (
+          <>
+            <span>市场合约地址</span>
+            <span className="market-address-value">{marketAddress || '未设置'}</span>
+          </>
+        ) : (
+          <>
+            <input
+              type="text"
+              value={marketInput}
+              onChange={(event) => setMarketInput(event.target.value)}
+              placeholder="市场合约地址 (0x...)"
+            />
+            <button onClick={handleSaveMarket}>保存</button>
+          </>
+        )}
         {marketAddress && (
           <span className={marketReady ? 'ready' : 'not-ready'}>
             {marketReady ? '已检测到市场合约' : '未检测到市场合约'}

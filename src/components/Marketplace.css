@@ -30,6 +30,12 @@
   align-items: center;
 }
 
+.market-address-value {
+  color: #ffffff;
+  font-weight: 600;
+  word-break: break-all;
+}
+
 .market-address input {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.2);
