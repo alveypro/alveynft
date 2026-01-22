@@ -116,6 +116,13 @@ export const NFT_CONFIG = {
       "type": "function"
     },
     {
+      "inputs": [{ "internalType": "address", "name": "newOwner", "type": "address" }],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
       "name": "burn",
       "outputs": [],
