@@ -15,7 +15,8 @@ import {
   useNFTSetTierPrice,
   useNFTSetTierSupply,
   useNFTWithdraw,
-  useNFTOwnerMint
+  useNFTOwnerMint,
+  useNFTTransferOwnership
 } from '../services/nftService'
 import { useERC20Decimals } from '../services/erc20Service'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
@@ -51,6 +52,7 @@ export function AdminPanel() {
   const { write: setRoyalty } = useNFTSetRoyalty(contractAddress)
   const { write: withdraw } = useNFTWithdraw(contractAddress)
   const { write: ownerMint } = useNFTOwnerMint(contractAddress)
+  const { write: transferOwnership } = useNFTTransferOwnership(contractAddress)
 
   const isOwner = useMemo(
     () => Boolean(address && owner && address.toLowerCase() === owner.toLowerCase()),
@@ -74,6 +76,7 @@ export function AdminPanel() {
   const [airdropTo, setAirdropTo] = useState('')
   const [airdropTier, setAirdropTier] = useState('0')
   const [airdropUri, setAirdropUri] = useState('')
+  const [newOwner, setNewOwner] = useState('')
 
   if (!contractAddress) {
     return null
@@ -287,6 +290,19 @@ export function AdminPanel() {
             }
           >
             发送空投
+          </button>
+        </div>
+
+        <div className="admin-block">
+          <h4>转移所有权</h4>
+          <input
+            type="text"
+            placeholder="新 Owner 地址"
+            value={newOwner}
+            onChange={(event) => setNewOwner(event.target.value)}
+          />
+          <button onClick={() => transferOwnership?.({ args: [newOwner] })}>
+            转移所有权
           </button>
         </div>
       </div>

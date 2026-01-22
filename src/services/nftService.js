@@ -556,3 +556,11 @@ export function useNFTBurn(contractAddress) {
     functionName: 'burn'
   })
 }
+
+export function useNFTTransferOwnership(contractAddress) {
+  return useContractWrite({
+    ...NFT_CONFIG,
+    address: contractAddress,
+    functionName: 'transferOwnership'
+  })
+}
