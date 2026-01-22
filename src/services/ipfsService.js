@@ -1,4 +1,6 @@
 const NFT_STORAGE_UPLOAD_URL = 'https://api.nft.storage/upload'
+const PINATA_FILE_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS'
+const PINATA_JSON_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS'
 
 function buildMetadata({ name, description, image, attributes }) {
   return {
@@ -42,6 +44,46 @@ async function uploadToNftStorage({ token, body, contentType }) {
   return data?.value?.cid
 }
 
+async function uploadFileToPinata({ token, file }) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(PINATA_FILE_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: formData
+  })
+
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Pinata file upload failed')
+  }
+
+  const data = await response.json()
+  return data?.IpfsHash
+}
+
+async function uploadJsonToPinata({ token, json }) {
+  const response = await fetch(PINATA_JSON_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(json)
+  })
+
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Pinata JSON upload failed')
+  }
+
+  const data = await response.json()
+  return data?.IpfsHash
+}
+
 export async function createTokenUri({
   name,
   description,
@@ -49,10 +91,11 @@ export async function createTokenUri({
   imageFile,
   attributes
 }) {
-  const token = import.meta.env.VITE_NFT_STORAGE_TOKEN
+  const nftStorageToken = import.meta.env.VITE_NFT_STORAGE_TOKEN
+  const pinataToken = import.meta.env.VITE_PINATA_JWT
   const fallbackImage = imageFile ? await readFileAsDataUrl(imageFile) : imageUrl
 
-  if (!token) {
+  if (!nftStorageToken && !pinataToken) {
     const metadata = buildMetadata({ name, description, image: fallbackImage, attributes })
     return encodeMetadataDataUri(metadata)
   }
@@ -60,21 +103,31 @@ export async function createTokenUri({
   try {
     let resolvedImage = imageUrl
     if (imageFile) {
-      const cid = await uploadToNftStorage({
-        token,
-        body: imageFile
-      })
-      resolvedImage = `ipfs://${cid}`
+      if (pinataToken) {
+        const cid = await uploadFileToPinata({ token: pinataToken, file: imageFile })
+        resolvedImage = `ipfs://${cid}`
+      } else if (nftStorageToken) {
+        const cid = await uploadToNftStorage({
+          token: nftStorageToken,
+          body: imageFile
+        })
+        resolvedImage = `ipfs://${cid}`
+      }
     }
 
     const metadata = buildMetadata({ name, description, image: resolvedImage, attributes })
-    const metadataCid = await uploadToNftStorage({
-      token,
-      body: JSON.stringify(metadata),
-      contentType: 'application/json'
-    })
+    let metadataCid = ''
+    if (pinataToken) {
+      metadataCid = await uploadJsonToPinata({ token: pinataToken, json: metadata })
+    } else if (nftStorageToken) {
+      metadataCid = await uploadToNftStorage({
+        token: nftStorageToken,
+        body: JSON.stringify(metadata),
+        contentType: 'application/json'
+      })
+    }
 
-    return `ipfs://${metadataCid}`
+    return metadataCid ? `ipfs://${metadataCid}` : encodeMetadataDataUri(metadata)
   } catch {
     const metadata = buildMetadata({ name, description, image: fallbackImage, attributes })
     return encodeMetadataDataUri(metadata)

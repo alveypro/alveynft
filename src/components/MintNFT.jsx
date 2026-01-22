@@ -185,7 +185,7 @@ export function MintNFT() {
           />
         </label>
         <p className="form-hint">
-          如设置了 `VITE_NFT_STORAGE_TOKEN` 会自动上传到 IPFS，失败时会自动用本地元数据继续铸造。
+          推荐设置 `VITE_PINATA_JWT` 自动上传到 IPFS，失败时会自动用本地元数据继续铸造。
         </p>
       </div>
       <div className="mint-info">
