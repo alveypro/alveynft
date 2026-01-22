@@ -10,6 +10,7 @@ import { TierShowcase } from './components/TierShowcase'
 import { WalletTokens } from './components/WalletTokens'
 import { useContractAddress, useContractStatus } from './services/contractAddress'
 import { useNFTOwner } from './services/nftService'
+import { IPFS_GATEWAYS, getPreferredGatewayKey, setPreferredGatewayKey } from './services/ipfsService'
 import './App.css'
 import './styles/mobile.css'
 
@@ -20,6 +21,7 @@ function App() {
   const { address: contractAddress } = useContractAddress()
   const { hasCode: contractReady } = useContractStatus(contractAddress)
   const { data: owner } = useNFTOwner(contractAddress, contractReady)
+  const [gatewayKey, setGatewayKey] = useState(() => getPreferredGatewayKey())
   const fallbackOwner =
     import.meta.env.VITE_OWNER_ADDRESS ||
     '0xd0dC6Ff0eA6a27a0a4Ba0002F019d0E1b9666c28'
@@ -62,6 +64,25 @@ function App() {
           </div>
           <div className={contractReady ? 'ready' : 'not-ready'}>
             {contractReady ? '已检测到合约' : '未检测到合约'}
+          </div>
+          <div className="gateway-select">
+            <label htmlFor="gateway">IPFS 网关</label>
+            <select
+              id="gateway"
+              value={gatewayKey}
+              onChange={(event) => {
+                const key = event.target.value
+                setPreferredGatewayKey(key)
+                setGatewayKey(key)
+                window.location.reload()
+              }}
+            >
+              {Object.keys(IPFS_GATEWAYS).map((key) => (
+                <option key={key} value={key}>
+                  {key}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             type="button"

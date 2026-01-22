@@ -3,11 +3,34 @@ const PINATA_FILE_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS'
 const PINATA_JSON_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS'
 const DEFAULT_IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
 const FALLBACK_IPFS_GATEWAY = 'https://nftstorage.link/ipfs/'
+const IPFS_GATEWAY_STORAGE_KEY = 'alvey.ipfsGateway'
+
+export const IPFS_GATEWAYS = {
+  'ipfs.io': 'https://ipfs.io/ipfs/',
+  'nftstorage.link': 'https://nftstorage.link/ipfs/',
+  'cloudflare-ipfs.com': 'https://cloudflare-ipfs.com/ipfs/'
+}
+
+export function getPreferredGatewayKey() {
+  if (typeof window === 'undefined') return 'ipfs.io'
+  const stored = window.localStorage.getItem(IPFS_GATEWAY_STORAGE_KEY)
+  return stored && IPFS_GATEWAYS[stored] ? stored : 'ipfs.io'
+}
+
+export function setPreferredGatewayKey(key) {
+  if (typeof window === 'undefined') return
+  if (!IPFS_GATEWAYS[key]) return
+  window.localStorage.setItem(IPFS_GATEWAY_STORAGE_KEY, key)
+}
+
+function getPreferredGatewayUrl() {
+  return IPFS_GATEWAYS[getPreferredGatewayKey()] || DEFAULT_IPFS_GATEWAY
+}
 
 export function toGatewayUrl(uri) {
   if (!uri) return ''
   if (uri.startsWith('ipfs://')) {
-    return `${DEFAULT_IPFS_GATEWAY}${uri.replace('ipfs://', '')}`
+    return `${getPreferredGatewayUrl()}${uri.replace('ipfs://', '')}`
   }
   return uri
 }
@@ -16,7 +39,9 @@ export function getGatewayUrls(uri) {
   if (!uri) return []
   if (!uri.startsWith('ipfs://')) return [uri]
   const cid = uri.replace('ipfs://', '')
-  return [`${DEFAULT_IPFS_GATEWAY}${cid}`, `${FALLBACK_IPFS_GATEWAY}${cid}`]
+  const primary = `${getPreferredGatewayUrl()}${cid}`
+  const fallback = `${FALLBACK_IPFS_GATEWAY}${cid}`
+  return primary === fallback ? [primary] : [primary, fallback]
 }
 
 export async function fetchIpfsJson(uri) {
