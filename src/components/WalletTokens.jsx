@@ -31,7 +31,8 @@ export function WalletTokens() {
       const normalizedFrom = fromBlock.trim()
       const normalizedTo = toBlock.trim()
       const from = normalizedFrom === '' ? 0n : BigInt(normalizedFrom)
-      const to = normalizedTo === '' || normalizedTo === 'latest' ? 'latest' : BigInt(normalizedTo)
+      const to =
+        normalizedTo === '' || normalizedTo === 'latest' ? 'latest' : BigInt(normalizedTo)
 
       const addressTopic = `0x${targetAddress.slice(2).padStart(64, '0')}`
       const chunkSize = 200000n
@@ -62,10 +63,12 @@ export function WalletTokens() {
         ])
 
         received.forEach((log) => {
+          if (!log?.topics || log.topics.length < 4 || !log.topics[3]) return
           const tokenId = BigInt(log.topics[3])
           owned.add(tokenId.toString())
         })
         sent.forEach((log) => {
+          if (!log?.topics || log.topics.length < 4 || !log.topics[3]) return
           const tokenId = BigInt(log.topics[3])
           owned.delete(tokenId.toString())
         })
@@ -83,7 +86,7 @@ export function WalletTokens() {
 
       setTokenIds(Array.from(owned).map((id) => Number(id)).sort((a, b) => a - b))
     } catch (error) {
-      setScanError(error?.message || '扫描失败')
+      setScanError(error?.message || '扫描失败，请确认区块号格式正确')
     } finally {
       setIsScanning(false)
     }
