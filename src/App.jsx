@@ -1,6 +1,4 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { AdminPanel } from './components/AdminPanel'
-import { DeployContract } from './components/DeployContract'
 import { ExploreNFT } from './components/ExploreNFT'
 import { MintHistory } from './components/MintHistory'
 import { MintNFT } from './components/MintNFT'
@@ -33,14 +31,12 @@ function App() {
             <span>Prestige / 品牌</span>
           </div>
         </div>
-        <DeployContract />
         <TierShowcase />
         <MintNFT />
         <WalletTokens />
         <MyCollection />
         <MintHistory />
         <ExploreNFT />
-        <AdminPanel />
       </main>
       <footer className="app-footer">
         <p className="footer-text">© 2024 AlveyChain NFT Platform</p>
