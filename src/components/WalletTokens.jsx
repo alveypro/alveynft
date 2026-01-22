@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAccount, usePublicClient } from 'wagmi'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
 import { NFT_CONFIG } from '../services/nftService'
-import { toGatewayUrl } from '../services/ipfsService'
+import { fetchIpfsJson, toGatewayUrl } from '../services/ipfsService'
 import { DEFAULT_NFT_IMAGE } from '../services/defaults'
 import './WalletTokens.css'
 
@@ -41,9 +41,7 @@ export function WalletTokens() {
     if (!uri) return null
     const data = decodeDataUri(uri)
     if (data) return data
-    const response = await fetch(toGatewayUrl(uri))
-    if (!response.ok) return null
-    return response.json()
+    return fetchIpfsJson(uri)
   }
 
   const scanTransfers = async () => {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
 import { useNFTTokenTier, useNFTTokenUri } from '../services/nftService'
-import { toGatewayUrl } from '../services/ipfsService'
+import { fetchIpfsJson, toGatewayUrl } from '../services/ipfsService'
 import { DEFAULT_NFT_IMAGE } from '../services/defaults'
 import './ExploreNFT.css'
 
@@ -16,21 +16,34 @@ export function ExploreNFT() {
   const { data: tokenUri } = useNFTTokenUri(contractAddress, tokenIdValue, contractReady)
   const { data: tokenTier } = useNFTTokenTier(contractAddress, tokenIdValue, contractReady)
   const [metadata, setMetadata] = useState(null)
+  const [metadataError, setMetadataError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const fetchMetadata = async () => {
     if (!tokenUri) return
     try {
-      const response = await fetch(toGatewayUrl(tokenUri))
-      if (!response.ok) return
-      const json = await response.json()
+      setIsLoading(true)
+      setMetadataError('')
+      const json = await fetchIpfsJson(tokenUri)
+      if (!json) {
+        setMetadataError('元数据加载失败，请稍后重试')
+        return
+      }
       setMetadata(json)
     } catch {
+      setMetadataError('元数据加载失败，请稍后重试')
       setMetadata(null)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   useEffect(() => {
     setMetadata(null)
+    setMetadataError('')
+    if (tokenUri) {
+      fetchMetadata()
+    }
   }, [tokenUri])
 
   if (!contractAddress) {
@@ -68,12 +81,15 @@ export function ExploreNFT() {
           </div>
           {tokenUri && (
             <div className="explore-actions">
-              <button onClick={fetchMetadata}>加载元数据</button>
+              <button onClick={fetchMetadata} disabled={isLoading}>
+                {isLoading ? '加载中...' : '加载元数据'}
+              </button>
               <a href={toGatewayUrl(tokenUri)} target="_blank" rel="noreferrer">
                 打开元数据
               </a>
             </div>
           )}
+          {metadataError && <div className="explore-error">{metadataError}</div>}
           {metadata && (
             <div className="explore-preview">
               <img

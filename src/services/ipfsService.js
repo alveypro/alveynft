@@ -1,7 +1,8 @@
 const NFT_STORAGE_UPLOAD_URL = 'https://api.nft.storage/upload'
 const PINATA_FILE_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS'
 const PINATA_JSON_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS'
-const DEFAULT_IPFS_GATEWAY = 'https://nftstorage.link/ipfs/'
+const DEFAULT_IPFS_GATEWAY = 'https://ipfs.io/ipfs/'
+const FALLBACK_IPFS_GATEWAY = 'https://nftstorage.link/ipfs/'
 
 export function toGatewayUrl(uri) {
   if (!uri) return ''
@@ -9,6 +10,26 @@ export function toGatewayUrl(uri) {
     return `${DEFAULT_IPFS_GATEWAY}${uri.replace('ipfs://', '')}`
   }
   return uri
+}
+
+export function getGatewayUrls(uri) {
+  if (!uri) return []
+  if (!uri.startsWith('ipfs://')) return [uri]
+  const cid = uri.replace('ipfs://', '')
+  return [`${DEFAULT_IPFS_GATEWAY}${cid}`, `${FALLBACK_IPFS_GATEWAY}${cid}`]
+}
+
+export async function fetchIpfsJson(uri) {
+  const urls = getGatewayUrls(uri)
+  for (const url of urls) {
+    try {
+      const response = await fetch(url)
+      if (response.ok) return response.json()
+    } catch {
+      // try next gateway
+    }
+  }
+  return null
 }
 
 function buildMetadata({ name, description, image, attributes, externalUrl }) {
