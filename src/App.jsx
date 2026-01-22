@@ -8,7 +8,7 @@ import { MintNFT } from './components/MintNFT'
 import { MyCollection } from './components/MyCollection'
 import { TierShowcase } from './components/TierShowcase'
 import { WalletTokens } from './components/WalletTokens'
-import { useContractAddress } from './services/contractAddress'
+import { useContractAddress, useContractStatus } from './services/contractAddress'
 import { useNFTOwner } from './services/nftService'
 import './App.css'
 import './styles/mobile.css'
@@ -18,10 +18,17 @@ function App() {
   const [showAdmin, setShowAdmin] = useState(false)
   const { address } = useAccount()
   const { address: contractAddress } = useContractAddress()
-  const { data: owner } = useNFTOwner(contractAddress, Boolean(contractAddress))
+  const { hasCode: contractReady } = useContractStatus(contractAddress)
+  const { data: owner } = useNFTOwner(contractAddress, contractReady)
+  const fallbackOwner = import.meta.env.VITE_OWNER_ADDRESS || ''
   const isOwner = useMemo(
-    () => Boolean(address && owner && address.toLowerCase() === owner.toLowerCase()),
-    [address, owner]
+    () =>
+      Boolean(
+        address &&
+          ((owner && address.toLowerCase() === owner.toLowerCase()) ||
+            (fallbackOwner && address.toLowerCase() === fallbackOwner.toLowerCase()))
+      ),
+    [address, owner, fallbackOwner]
   )
 
   return (
