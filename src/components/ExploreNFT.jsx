@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
 import { useNFTTokenTier, useNFTTokenUri } from '../services/nftService'
+import { toGatewayUrl } from '../services/ipfsService'
 import './ExploreNFT.css'
 
 export function ExploreNFT() {
@@ -13,6 +14,23 @@ export function ExploreNFT() {
   }, [tokenIdInput])
   const { data: tokenUri } = useNFTTokenUri(contractAddress, tokenIdValue, contractReady)
   const { data: tokenTier } = useNFTTokenTier(contractAddress, tokenIdValue, contractReady)
+  const [metadata, setMetadata] = useState(null)
+
+  const fetchMetadata = async () => {
+    if (!tokenUri) return
+    try {
+      const response = await fetch(toGatewayUrl(tokenUri))
+      if (!response.ok) return
+      const json = await response.json()
+      setMetadata(json)
+    } catch {
+      setMetadata(null)
+    }
+  }
+
+  useEffect(() => {
+    setMetadata(null)
+  }, [tokenUri])
 
   if (!contractAddress) {
     return null
@@ -47,6 +65,25 @@ export function ExploreNFT() {
             <span>Token URI:</span>
             <span>{tokenUri ?? '-'}</span>
           </div>
+          {tokenUri && (
+            <div className="explore-actions">
+              <button onClick={fetchMetadata}>加载元数据</button>
+              <a href={toGatewayUrl(tokenUri)} target="_blank" rel="noreferrer">
+                打开元数据
+              </a>
+            </div>
+          )}
+          {metadata && (
+            <div className="explore-preview">
+              {metadata.image && (
+                <img src={toGatewayUrl(metadata.image)} alt={metadata.name || 'NFT'} />
+              )}
+              <div className="explore-meta">
+                <div>{metadata.name}</div>
+                <div className="explore-desc">{metadata.description}</div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </section>

@@ -2,15 +2,8 @@ import { useMemo, useState } from 'react'
 import { usePublicClient } from 'wagmi'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
 import { NFT_CONFIG } from '../services/nftService'
+import { toGatewayUrl } from '../services/ipfsService'
 import './MyCollection.css'
-
-function toGatewayUrl(uri) {
-  if (!uri) return ''
-  if (uri.startsWith('ipfs://')) {
-    return `https://nftstorage.link/ipfs/${uri.replace('ipfs://', '')}`
-  }
-  return uri
-}
 
 function decodeDataUri(uri) {
   const prefix = 'data:application/json;utf8,'
@@ -75,7 +68,7 @@ export function MyCollection() {
           tokenId,
           tokenTier: Number(tokenTier) + 1,
           name: metadata?.name ?? `Token #${tokenId}`,
-          image: toGatewayUrl(metadata?.image),
+          image: toGatewayUrl(metadata?.image || metadata?.image_url),
           tokenURI
         })
       } catch {
@@ -122,13 +115,23 @@ export function MyCollection() {
             <div className="collection-image">
               {item.image ? <img src={item.image} alt={item.name} /> : <span>暂无图片</span>}
             </div>
-            <div className="collection-info">
-              <div className="collection-title">{item.name}</div>
-              <div className="collection-meta">Token #{item.tokenId}</div>
-              {item.tokenTier && <div className="collection-meta">Tier {item.tokenTier}</div>}
-            </div>
+          <div className="collection-info">
+            <div className="collection-title">{item.name}</div>
+            <div className="collection-meta">Token #{item.tokenId}</div>
+            {item.tokenTier && <div className="collection-meta">Tier {item.tokenTier}</div>}
+            {item.tokenURI && (
+              <a
+                className="collection-link"
+                href={toGatewayUrl(item.tokenURI)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                查看元数据
+              </a>
+            )}
           </div>
-        ))}
+        </div>
+      ))}
       </div>
     </section>
   )

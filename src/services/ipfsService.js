@@ -1,12 +1,24 @@
 const NFT_STORAGE_UPLOAD_URL = 'https://api.nft.storage/upload'
 const PINATA_FILE_URL = 'https://api.pinata.cloud/pinning/pinFileToIPFS'
 const PINATA_JSON_URL = 'https://api.pinata.cloud/pinning/pinJSONToIPFS'
+const DEFAULT_IPFS_GATEWAY = 'https://nftstorage.link/ipfs/'
 
-function buildMetadata({ name, description, image, attributes }) {
+export function toGatewayUrl(uri) {
+  if (!uri) return ''
+  if (uri.startsWith('ipfs://')) {
+    return `${DEFAULT_IPFS_GATEWAY}${uri.replace('ipfs://', '')}`
+  }
+  return uri
+}
+
+function buildMetadata({ name, description, image, attributes, externalUrl }) {
+  const imageGateway = toGatewayUrl(image)
   return {
     name: name?.trim() || 'AlveyChain NFT',
     description: description?.trim() || 'Minted on AlveyChain',
     image: image || '',
+    image_url: imageGateway || image || '',
+    external_url: externalUrl || '',
     attributes: attributes || []
   }
 }
@@ -91,12 +103,19 @@ export async function createTokenUri({
   imageFile,
   attributes
 }) {
+  const externalUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const nftStorageToken = import.meta.env.VITE_NFT_STORAGE_TOKEN
   const pinataToken = import.meta.env.VITE_PINATA_JWT
   const fallbackImage = imageFile ? await readFileAsDataUrl(imageFile) : imageUrl
 
   if (!nftStorageToken && !pinataToken) {
-    const metadata = buildMetadata({ name, description, image: fallbackImage, attributes })
+    const metadata = buildMetadata({
+      name,
+      description,
+      image: fallbackImage,
+      attributes,
+      externalUrl
+    })
     return encodeMetadataDataUri(metadata)
   }
 
@@ -115,7 +134,13 @@ export async function createTokenUri({
       }
     }
 
-    const metadata = buildMetadata({ name, description, image: resolvedImage, attributes })
+    const metadata = buildMetadata({
+      name,
+      description,
+      image: resolvedImage,
+      attributes,
+      externalUrl
+    })
     let metadataCid = ''
     if (pinataToken) {
       metadataCid = await uploadJsonToPinata({ token: pinataToken, json: metadata })
@@ -129,7 +154,13 @@ export async function createTokenUri({
 
     return metadataCid ? `ipfs://${metadataCid}` : encodeMetadataDataUri(metadata)
   } catch {
-    const metadata = buildMetadata({ name, description, image: fallbackImage, attributes })
+    const metadata = buildMetadata({
+      name,
+      description,
+      image: fallbackImage,
+      attributes,
+      externalUrl
+    })
     return encodeMetadataDataUri(metadata)
   }
 }
