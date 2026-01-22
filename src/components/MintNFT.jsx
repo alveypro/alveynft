@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount, usePublicClient } from 'wagmi'
-import { decodeEventLog, formatUnits, parseAbiItem, toEventSelector } from 'viem'
+import { decodeEventLog, formatUnits, parseAbiItem } from 'viem'
 import {
   useNFTMint,
   useNFTMintedCount,
@@ -63,7 +63,10 @@ export function MintNFT() {
       parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'),
     []
   )
-  const transferTopic = useMemo(() => toEventSelector(transferEvent), [transferEvent])
+  const transferTopic = useMemo(
+    () => '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
+    []
+  )
 
   const mintedCountNumber = useMemo(() => Number(mintedCount ?? 0), [mintedCount])
   const maxMintsNumber = useMemo(() => Number(maxMints ?? 3), [maxMints])
