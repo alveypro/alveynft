@@ -19,6 +19,7 @@ export function WalletTokens() {
   const [isScanning, setIsScanning] = useState(false)
   const [tokenIds, setTokenIds] = useState([])
   const [scanError, setScanError] = useState('')
+  const [scanInfo, setScanInfo] = useState('')
 
   const targetAddress = useMemo(() => normalizeAddress(address), [address])
 
@@ -26,13 +27,35 @@ export function WalletTokens() {
     if (!publicClient || !contractAddress || !targetAddress || !contractReady) return
     setIsScanning(true)
     setScanError('')
+    setScanInfo('')
 
     try {
       const normalizedFrom = fromBlock.trim()
       const normalizedTo = toBlock.trim()
-      const from = normalizedFrom === '' ? 0n : BigInt(normalizedFrom)
-      const to =
-        normalizedTo === '' || normalizedTo === 'latest' ? 'latest' : BigInt(normalizedTo)
+      const latestBlock = await publicClient.getBlockNumber()
+      const parseBlock = (value) => {
+        if (!value) return null
+        if (value === 'latest') return 'latest'
+        if (!/^\d+$/.test(value)) {
+          throw new Error('区块号只能输入数字或 latest')
+        }
+        return BigInt(value)
+      }
+
+      const parsedFrom = parseBlock(normalizedFrom)
+      const parsedTo = parseBlock(normalizedTo)
+
+      const from =
+        parsedFrom === null
+          ? latestBlock > 200000n
+            ? latestBlock - 200000n
+            : 0n
+          : parsedFrom
+      const to = parsedTo === null || parsedTo === 'latest' ? 'latest' : parsedTo
+
+      if (parsedFrom === null) {
+        setScanInfo('未填写起始区块，默认扫描最近 200000 区块。')
+      }
 
       const addressTopic = `0x${targetAddress.slice(2).padStart(64, '0')}`
       const chunkSize = 200000n
@@ -85,6 +108,10 @@ export function WalletTokens() {
       }
 
       setTokenIds(Array.from(owned).map((id) => Number(id)).sort((a, b) => a - b))
+
+      if (!owned.size) {
+        setScanInfo('该区块范围内未发现 Token ID，可尝试填入合约部署区块。')
+      }
     } catch (error) {
       setScanError(error?.message || '扫描失败，请确认区块号格式正确')
     } finally {
@@ -115,6 +142,7 @@ export function WalletTokens() {
           {isScanning ? '扫描中...' : '扫描我的 NFT'}
         </button>
       </div>
+      {scanInfo && <div className="message info-message">{scanInfo}</div>}
       {scanError && <div className="message error-message">{scanError}</div>}
       <div className="wallet-results">
         {tokenIds.length ? (
