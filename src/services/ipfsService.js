@@ -14,6 +14,15 @@ function encodeMetadataDataUri(metadata) {
   return `data:application/json;utf8,${encodeURIComponent(json)}`
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
+
 async function uploadToNftStorage({ token, body, contentType }) {
   const response = await fetch(NFT_STORAGE_UPLOAD_URL, {
     method: 'POST',
@@ -41,27 +50,33 @@ export async function createTokenUri({
   attributes
 }) {
   const token = import.meta.env.VITE_NFT_STORAGE_TOKEN
+  const fallbackImage = imageFile ? await readFileAsDataUrl(imageFile) : imageUrl
 
   if (!token) {
-    const metadata = buildMetadata({ name, description, image: imageUrl, attributes })
+    const metadata = buildMetadata({ name, description, image: fallbackImage, attributes })
     return encodeMetadataDataUri(metadata)
   }
 
-  let resolvedImage = imageUrl
-  if (imageFile) {
-    const cid = await uploadToNftStorage({
+  try {
+    let resolvedImage = imageUrl
+    if (imageFile) {
+      const cid = await uploadToNftStorage({
+        token,
+        body: imageFile
+      })
+      resolvedImage = `ipfs://${cid}`
+    }
+
+    const metadata = buildMetadata({ name, description, image: resolvedImage, attributes })
+    const metadataCid = await uploadToNftStorage({
       token,
-      body: imageFile
+      body: JSON.stringify(metadata),
+      contentType: 'application/json'
     })
-    resolvedImage = `ipfs://${cid}`
+
+    return `ipfs://${metadataCid}`
+  } catch {
+    const metadata = buildMetadata({ name, description, image: fallbackImage, attributes })
+    return encodeMetadataDataUri(metadata)
   }
-
-  const metadata = buildMetadata({ name, description, image: resolvedImage, attributes })
-  const metadataCid = await uploadToNftStorage({
-    token,
-    body: JSON.stringify(metadata),
-    contentType: 'application/json'
-  })
-
-  return `ipfs://${metadataCid}`
 }

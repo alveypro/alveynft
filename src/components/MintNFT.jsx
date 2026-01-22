@@ -184,7 +184,9 @@ export function MintNFT() {
             onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
           />
         </label>
-        <p className="form-hint">如设置了 `VITE_NFT_STORAGE_TOKEN` 会自动上传到 IPFS。</p>
+        <p className="form-hint">
+          如设置了 `VITE_NFT_STORAGE_TOKEN` 会自动上传到 IPFS，失败时会自动用本地元数据继续铸造。
+        </p>
       </div>
       <div className="mint-info">
         <div className="info-item">
