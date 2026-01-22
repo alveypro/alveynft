@@ -9,8 +9,12 @@ export function MintHistory() {
   const [copyStatus, setCopyStatus] = useState('')
   const { address: contractAddress } = useContractAddress()
 
-  useEffect(() => {
+  const refreshHistory = () => {
     setHistory(getMintHistory())
+  }
+
+  useEffect(() => {
+    refreshHistory()
   }, [])
 
   const handleCopy = async (tokenId) => {
@@ -37,15 +41,20 @@ export function MintHistory() {
     <section className="history-card">
       <div className="history-header">
         <h3>铸造记录</h3>
-        <button
-          className="history-clear"
-          onClick={() => {
-            clearMintHistory()
-            setHistory([])
-          }}
-        >
-          清空记录
-        </button>
+        <div className="history-actions">
+          <button className="history-refresh" onClick={refreshHistory}>
+            刷新
+          </button>
+          <button
+            className="history-clear"
+            onClick={() => {
+              clearMintHistory()
+              setHistory([])
+            }}
+          >
+            清空记录
+          </button>
+        </div>
       </div>
       <div className="history-list">
         {history.map((item) => (

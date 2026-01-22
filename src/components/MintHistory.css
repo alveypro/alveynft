@@ -13,6 +13,20 @@
   align-items: center;
 }
 
+.history-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.history-refresh {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
 .history-clear {
   background: transparent;
   color: rgba(255, 255, 255, 0.7);
