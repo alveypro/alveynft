@@ -21,6 +21,7 @@ import {
 import { useERC20Decimals } from '../services/erc20Service'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
 import { useAccount } from 'wagmi'
+import { DeployMarket } from './DeployMarket'
 import './AdminPanel.css'
 
 const TIER_COUNT = 8
@@ -306,6 +307,8 @@ export function AdminPanel() {
           </button>
         </div>
       </div>
+
+      <DeployMarket />
     </section>
   )
 }

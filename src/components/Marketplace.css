@@ -1,0 +1,175 @@
+.market-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  display: grid;
+  gap: 16px;
+}
+
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.market-refresh {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 14px;
+  cursor: pointer;
+}
+
+.market-address {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.market-address input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #ffffff;
+}
+
+.market-address button {
+  border-radius: 10px;
+  border: none;
+  background: rgba(0, 255, 136, 0.2);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.market-address .ready {
+  color: #00ff88;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.market-address .not-ready {
+  color: #ffb454;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.market-actions {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.market-box {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.market-form {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+}
+
+.market-form input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #ffffff;
+}
+
+.market-form button {
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #00ff88 0%, #00b8ff 100%);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.market-approve button {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.market-list {
+  display: grid;
+  gap: 12px;
+}
+
+.market-item {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.market-image {
+  height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.market-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.market-title {
+  font-weight: 600;
+}
+
+.market-meta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.market-price {
+  font-size: 14px;
+  color: #00ff88;
+}
+
+.market-actions-inline {
+  display: grid;
+  gap: 8px;
+}
+
+.market-actions-inline button {
+  border-radius: 8px;
+  border: none;
+  background: rgba(0, 255, 136, 0.2);
+  color: #ffffff;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.market-actions-inline input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #ffffff;
+}

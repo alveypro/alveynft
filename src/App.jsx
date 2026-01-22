@@ -6,6 +6,7 @@ import { ExploreNFT } from './components/ExploreNFT'
 import { MintHistory } from './components/MintHistory'
 import { MintNFT } from './components/MintNFT'
 import { MyCollection } from './components/MyCollection'
+import { Marketplace } from './components/Marketplace'
 import { TierShowcase } from './components/TierShowcase'
 import { WalletTokens } from './components/WalletTokens'
 import { useContractAddress, useContractStatus } from './services/contractAddress'
@@ -102,6 +103,12 @@ function App() {
             Mint / 铸造
           </button>
           <button
+            className={activeTab === 'market' ? 'active' : ''}
+            onClick={() => setActiveTab('market')}
+          >
+            Market / 交易
+          </button>
+          <button
             className={activeTab === 'collection' ? 'active' : ''}
             onClick={() => setActiveTab('collection')}
           >
@@ -120,6 +127,7 @@ function App() {
             <MintNFT />
           </>
         )}
+        {activeTab === 'market' && <Marketplace />}
         {activeTab === 'collection' && (
           <>
             <WalletTokens />

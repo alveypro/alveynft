@@ -328,6 +328,27 @@ export const NFT_CONFIG = {
       "stateMutability": "view",
       "type": "function"
     }
+    ,
+    {
+      "inputs": [
+        { "internalType": "address", "name": "owner", "type": "address" },
+        { "internalType": "address", "name": "operator", "type": "address" }
+      ],
+      "name": "isApprovedForAll",
+      "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        { "internalType": "address", "name": "operator", "type": "address" },
+        { "internalType": "bool", "name": "approved", "type": "bool" }
+      ],
+      "name": "setApprovalForAll",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
   ]
 }
 
@@ -595,5 +616,24 @@ export function useNFTTransfer(contractAddress) {
     ...NFT_CONFIG,
     address: contractAddress,
     functionName: 'safeTransferFrom'
+  })
+}
+
+export function useNFTIsApprovedForAll(contractAddress, owner, operator, enabled = true) {
+  return useContractRead({
+    ...NFT_CONFIG,
+    address: contractAddress,
+    functionName: 'isApprovedForAll',
+    args: [owner, operator],
+    watch: true,
+    enabled: Boolean(contractAddress && owner && operator) && enabled
+  })
+}
+
+export function useNFTSetApprovalForAll(contractAddress) {
+  return useContractWrite({
+    ...NFT_CONFIG,
+    address: contractAddress,
+    functionName: 'setApprovalForAll'
   })
 }

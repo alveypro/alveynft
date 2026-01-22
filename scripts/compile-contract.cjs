@@ -2,13 +2,16 @@ const fs = require('fs');
 const path = require('path');
 const solc = require('solc');
 
-const contractPath = path.resolve(__dirname, '../src/contracts/AlveyNFT.sol');
-const source = fs.readFileSync(contractPath, 'utf8');
+const nftPath = path.resolve(__dirname, '../src/contracts/AlveyNFT.sol');
+const marketPath = path.resolve(__dirname, '../src/contracts/AlveyMarketplace.sol');
+const nftSource = fs.readFileSync(nftPath, 'utf8');
+const marketSource = fs.readFileSync(marketPath, 'utf8');
 
 const input = {
   language: 'Solidity',
   sources: {
-    'AlveyNFT.sol': { content: source }
+    'AlveyNFT.sol': { content: nftSource },
+    'AlveyMarketplace.sol': { content: marketSource }
   },
   settings: {
     optimizer: { enabled: true, runs: 200 },
@@ -30,12 +33,22 @@ if (output.errors?.length) {
   }
 }
 
-const contract = output.contracts['AlveyNFT.sol'].AlveyNFT;
-const artifact = {
-  abi: contract.abi,
-  bytecode: `0x${contract.evm.bytecode.object}`
+const nftContract = output.contracts['AlveyNFT.sol'].AlveyNFT;
+const nftArtifact = {
+  abi: nftContract.abi,
+  bytecode: `0x${nftContract.evm.bytecode.object}`
 };
 
-const outPath = path.resolve(__dirname, '../src/contracts/AlveyNFT.artifact.json');
-fs.writeFileSync(outPath, JSON.stringify(artifact, null, 2));
-console.log('Wrote', outPath);
+const nftOutPath = path.resolve(__dirname, '../src/contracts/AlveyNFT.artifact.json');
+fs.writeFileSync(nftOutPath, JSON.stringify(nftArtifact, null, 2));
+console.log('Wrote', nftOutPath);
+
+const marketContract = output.contracts['AlveyMarketplace.sol'].AlveyMarketplace;
+const marketArtifact = {
+  abi: marketContract.abi,
+  bytecode: `0x${marketContract.evm.bytecode.object}`
+};
+
+const marketOutPath = path.resolve(__dirname, '../src/contracts/AlveyMarketplace.artifact.json');
+fs.writeFileSync(marketOutPath, JSON.stringify(marketArtifact, null, 2));
+console.log('Wrote', marketOutPath);
