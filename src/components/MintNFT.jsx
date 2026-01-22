@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useAccount } from 'wagmi'
-import { formatUnits } from 'viem'
+import { useAccount, usePublicClient } from 'wagmi'
+import { decodeEventLog, formatUnits, parseAbiItem } from 'viem'
 import {
   useNFTMint,
   useNFTMintedCount,
@@ -45,7 +45,8 @@ export function MintNFT() {
   const { data: tokenBalance } = useERC20Balance(paymentToken, address)
   const { data: allowance } = useERC20Allowance(paymentToken, address, contractAddress)
   const { write: approveToken, isLoading: isApproving } = useERC20Approve(paymentToken)
-  const { write: mint, isLoading, isSuccess, isError, error } = useNFTMint(contractAddress)
+  const publicClient = usePublicClient()
+  const { writeAsync: mintAsync, isLoading, isSuccess, isError, error } = useNFTMint(contractAddress)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -53,6 +54,13 @@ export function MintNFT() {
   const [metadataStatus, setMetadataStatus] = useState('')
   const [metadataError, setMetadataError] = useState('')
   const [pendingHistoryId, setPendingHistoryId] = useState('')
+  const [lastTokenId, setLastTokenId] = useState(null)
+
+  const transferEvent = useMemo(
+    () =>
+      parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'),
+    []
+  )
 
   const mintedCountNumber = useMemo(() => Number(mintedCount ?? 0), [mintedCount])
   const maxMintsNumber = useMemo(() => Number(maxMints ?? 3), [maxMints])
@@ -111,9 +119,28 @@ export function MintNFT() {
       })
       setPendingHistoryId(historyId)
 
-      mint({
+      const hash = await mintAsync?.({
         args: [selectedTier, tokenURI]
       })
+
+      if (hash && publicClient) {
+        const receipt = await publicClient.waitForTransactionReceipt({ hash })
+        const transferLog = receipt.logs.find(
+          (log) => log.address?.toLowerCase() === contractAddress?.toLowerCase()
+        )
+        if (transferLog) {
+          const decoded = decodeEventLog({
+            abi: [transferEvent],
+            data: transferLog.data,
+            topics: transferLog.topics
+          })
+          if (decoded?.args?.tokenId !== undefined) {
+            const tokenId = Number(decoded.args.tokenId)
+            setLastTokenId(tokenId)
+            updateMintHistory(historyId, { tokenId })
+          }
+        }
+      }
     } catch (uploadError) {
       setMetadataStatus('')
       setMetadataError(uploadError?.message || '元数据上传失败')
@@ -257,6 +284,9 @@ export function MintNFT() {
       {metadataError && <div className="message error-message">{metadataError}</div>}
       {isSuccess && <div className="message success-message">铸造成功！</div>}
       {isError && <div className="message error-message">{error?.message || '铸造失败'}</div>}
+      {lastTokenId !== null && (
+        <div className="message success-message">你的 Token ID: #{lastTokenId}</div>
+      )}
     </div>
   )
 }
