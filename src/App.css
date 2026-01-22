@@ -25,6 +25,41 @@
   gap: 2rem;
 }
 
+.section-tabs {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.section-tabs button {
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.section-tabs button.active {
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.18);
+}
+
+.admin-toggle {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.admin-toggle button {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+}
+
 .welcome-section {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 16px;

@@ -72,4 +72,8 @@
   .wallet-form {
     grid-template-columns: 1fr;
   }
+
+  .section-tabs {
+    flex-direction: column;
+  }
 }
