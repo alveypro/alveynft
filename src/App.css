@@ -30,6 +30,15 @@
   border-radius: 16px;
   padding: 1.5rem 2rem;
   color: #ffffff;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.welcome-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .welcome-title {
@@ -40,6 +49,21 @@
 .welcome-text {
   margin: 0;
   color: rgba(255, 255, 255, 0.75);
+}
+
+.keyword-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.keyword-row span {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .app-footer {

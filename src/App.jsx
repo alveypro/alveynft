@@ -21,8 +21,17 @@ function App() {
       </header>
       <main className="app-main">
         <div className="welcome-section">
-          <h2 className="welcome-title">欢迎来到AlveyChain NFT平台</h2>
-          <p className="welcome-text">连接您的钱包开始探索NFT世界</p>
+          <div className="welcome-kicker">AlveyChain Official / 官方发行</div>
+          <h2 className="welcome-title">稀缺铸造 · 高级权益</h2>
+          <p className="welcome-text">
+            Mint the rarest tiers, unlock premium privileges. / 铸造稀缺等级，解锁高阶权益
+          </p>
+          <div className="keyword-row">
+            <span>Scarcity / 稀缺</span>
+            <span>Utility / 权益</span>
+            <span>On-chain / 链上</span>
+            <span>Prestige / 品牌</span>
+          </div>
         </div>
         <DeployContract />
         <TierShowcase />
