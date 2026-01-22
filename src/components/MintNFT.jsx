@@ -52,6 +52,7 @@ export function MintNFT() {
   const [description, setDescription] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [imageFile, setImageFile] = useState(null)
+  const [useGateway, setUseGateway] = useState(true)
   const [metadataStatus, setMetadataStatus] = useState('')
   const [metadataError, setMetadataError] = useState('')
   const [pendingHistoryId, setPendingHistoryId] = useState('')
@@ -114,7 +115,8 @@ export function MintNFT() {
         attributes: [
           { trait_type: 'Tier', value: `Tier ${selectedTier + 1}` },
           { trait_type: 'Price', value: priceLabel }
-        ]
+        ],
+        useGateway
       })
       setMetadataStatus('正在提交铸造交易...')
       const historyId = addMintHistory({
@@ -251,6 +253,14 @@ export function MintNFT() {
             accept="image/*"
             onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
           />
+        </label>
+        <label className="form-checkbox">
+          <input
+            type="checkbox"
+            checked={useGateway}
+            onChange={(event) => setUseGateway(event.target.checked)}
+          />
+          钱包兼容模式（使用 HTTPS Token URI，更容易被钱包识别）
         </label>
         <p className="form-hint">
           推荐设置 `VITE_PINATA_JWT` 自动上传到 IPFS，失败时会自动用本地元数据继续铸造。

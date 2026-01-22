@@ -122,7 +122,8 @@ export async function createTokenUri({
   description,
   imageUrl,
   imageFile,
-  attributes
+  attributes,
+  useGateway = false
 }) {
   const externalUrl = typeof window !== 'undefined' ? window.location.origin : ''
   const nftStorageToken = import.meta.env.VITE_NFT_STORAGE_TOKEN
@@ -133,7 +134,7 @@ export async function createTokenUri({
     const metadata = buildMetadata({
       name,
       description,
-      image: fallbackImage,
+      image: useGateway ? toGatewayUrl(fallbackImage) : fallbackImage,
       attributes,
       externalUrl
     })
@@ -158,7 +159,7 @@ export async function createTokenUri({
     const metadata = buildMetadata({
       name,
       description,
-      image: resolvedImage,
+      image: useGateway ? toGatewayUrl(resolvedImage) : resolvedImage,
       attributes,
       externalUrl
     })
@@ -173,12 +174,14 @@ export async function createTokenUri({
       })
     }
 
-    return metadataCid ? `ipfs://${metadataCid}` : encodeMetadataDataUri(metadata)
+    if (!metadataCid) return encodeMetadataDataUri(metadata)
+    const tokenUri = `ipfs://${metadataCid}`
+    return useGateway ? toGatewayUrl(tokenUri) : tokenUri
   } catch {
     const metadata = buildMetadata({
       name,
       description,
-      image: fallbackImage,
+      image: useGateway ? toGatewayUrl(fallbackImage) : fallbackImage,
       attributes,
       externalUrl
     })

@@ -77,6 +77,18 @@
   text-align: left;
 }
 
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.form-checkbox input {
+  accent-color: #00ff88;
+}
+
 .info-item {
   display: flex;
   justify-content: space-between;
