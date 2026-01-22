@@ -1,0 +1,66 @@
+.tier-card {
+  padding: 20px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.45), rgba(0, 184, 255, 0.1));
+  color: #ffffff;
+  display: grid;
+  gap: 16px;
+}
+
+.tier-header h3 {
+  margin: 0 0 6px;
+}
+
+.tier-header p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tier-muted {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tier-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.tier-tile {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.tier-label {
+  font-weight: 700;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.tier-price {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tier-progress {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.tier-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ff88, #00b8ff);
+}
+
+.tier-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}

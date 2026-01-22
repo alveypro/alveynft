@@ -1,0 +1,135 @@
+import { useMemo, useState } from 'react'
+import { usePublicClient } from 'wagmi'
+import { useContractAddress, useContractStatus } from '../services/contractAddress'
+import { NFT_CONFIG } from '../services/nftService'
+import './MyCollection.css'
+
+function toGatewayUrl(uri) {
+  if (!uri) return ''
+  if (uri.startsWith('ipfs://')) {
+    return `https://nftstorage.link/ipfs/${uri.replace('ipfs://', '')}`
+  }
+  return uri
+}
+
+function decodeDataUri(uri) {
+  const prefix = 'data:application/json;utf8,'
+  if (!uri.startsWith(prefix)) return null
+  try {
+    const json = decodeURIComponent(uri.slice(prefix.length))
+    return JSON.parse(json)
+  } catch {
+    return null
+  }
+}
+
+async function fetchMetadata(uri) {
+  if (!uri) return null
+  const data = decodeDataUri(uri)
+  if (data) return data
+
+  const response = await fetch(toGatewayUrl(uri))
+  if (!response.ok) return null
+  return response.json()
+}
+
+export function MyCollection() {
+  const publicClient = usePublicClient()
+  const { address: contractAddress } = useContractAddress()
+  const { hasCode: contractReady } = useContractStatus(contractAddress)
+  const [startId, setStartId] = useState('0')
+  const [endId, setEndId] = useState('20')
+  const [items, setItems] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const range = useMemo(() => {
+    const start = Number(startId)
+    const end = Number(endId)
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return []
+    const normalizedStart = Math.max(0, Math.min(start, end))
+    const normalizedEnd = Math.max(0, Math.max(start, end))
+    return Array.from({ length: normalizedEnd - normalizedStart + 1 }, (_, idx) => normalizedStart + idx)
+  }, [startId, endId])
+
+  const handleFetch = async () => {
+    if (!publicClient || !contractAddress || !contractReady) return
+    setIsLoading(true)
+    const next = []
+
+    for (const tokenId of range) {
+      try {
+        const tokenURI = await publicClient.readContract({
+          ...NFT_CONFIG,
+          address: contractAddress,
+          functionName: 'tokenURI',
+          args: [BigInt(tokenId)]
+        })
+        const tokenTier = await publicClient.readContract({
+          ...NFT_CONFIG,
+          address: contractAddress,
+          functionName: 'tokenTier',
+          args: [BigInt(tokenId)]
+        })
+        const metadata = await fetchMetadata(tokenURI)
+        next.push({
+          tokenId,
+          tokenTier: Number(tokenTier) + 1,
+          name: metadata?.name ?? `Token #${tokenId}`,
+          image: toGatewayUrl(metadata?.image),
+          tokenURI
+        })
+      } catch {
+        next.push({
+          tokenId,
+          tokenTier: null,
+          name: `Token #${tokenId}`,
+          image: '',
+          tokenURI: ''
+        })
+      }
+    }
+
+    setItems(next)
+    setIsLoading(false)
+  }
+
+  if (!contractAddress) return null
+
+  return (
+    <section className="collection-card">
+      <h3>我的藏品</h3>
+      <p>输入 Token ID 区间，批量查看 NFT 元数据。</p>
+      <div className="collection-form">
+        <input
+          type="number"
+          value={startId}
+          onChange={(event) => setStartId(event.target.value)}
+          placeholder="起始 ID"
+        />
+        <input
+          type="number"
+          value={endId}
+          onChange={(event) => setEndId(event.target.value)}
+          placeholder="结束 ID"
+        />
+        <button onClick={handleFetch} disabled={isLoading || !contractReady}>
+          {isLoading ? '读取中...' : '加载藏品'}
+        </button>
+      </div>
+      <div className="collection-grid">
+        {items.map((item) => (
+          <div key={item.tokenId} className="collection-item">
+            <div className="collection-image">
+              {item.image ? <img src={item.image} alt={item.name} /> : <span>暂无图片</span>}
+            </div>
+            <div className="collection-info">
+              <div className="collection-title">{item.name}</div>
+              <div className="collection-meta">Token #{item.tokenId}</div>
+              {item.tokenTier && <div className="collection-meta">Tier {item.tokenTier}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}

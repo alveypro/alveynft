@@ -1,0 +1,62 @@
+.admin-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  display: grid;
+  gap: 16px;
+}
+
+.admin-card h3 {
+  margin: 0;
+}
+
+.admin-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-block {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.admin-block h4 {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.admin-block input,
+.admin-block textarea,
+.admin-block select {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #ffffff;
+}
+
+.admin-block button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(0, 255, 136, 0.2);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-inline {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}

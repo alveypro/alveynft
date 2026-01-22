@@ -1,0 +1,59 @@
+.history-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  display: grid;
+  gap: 12px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-clear {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.history-title {
+  font-weight: 600;
+}
+
+.history-meta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.history-status {
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.history-status.confirmed {
+  color: #00ff88;
+}
+
+.history-status.failed {
+  color: #ff7070;
+}

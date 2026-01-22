@@ -5,34 +5,20 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract AlveyNFT is ERC721, ERC721URIStorage, Ownable {
-    uint256 private _tokenIdCounter;
-    uint256 public constant MINT_PRICE = 0.01 ether;
-    uint256 public constant MAX_MINTS_PER_WALLET = 3;
-    
-    mapping(address => uint256) public mintedWallets;
+contract AlveyNFT is ERC721URIStorage, Ownable {
+    constructor() ERC721URIStorage("AlveyNFT", "ANFT") Ownable(msg.sender) {}
 
-    constructor() ERC721("AlveyNFT", "ANFT") {}
-
-    function mint(string memory tokenURI) public payable {
-        require(msg.value >= MINT_PRICE, "Insufficient payment");
-        require(mintedWallets[msg.sender] < MAX_MINTS_PER_WALLET, "Max mints reached");
-
-        uint256 tokenId = _tokenIdCounter;
-        _tokenIdCounter++;
-        
-        _safeMint(msg.sender, tokenId);
-        _setTokenURI(tokenId, tokenURI);
-        
-        mintedWallets[msg.sender]++;
+    function safeMint(address to, uint256 tokenId, string memory uri) public onlyOwner {
+        _safeMint(to, tokenId);
+        _setTokenURI(tokenId, uri);
     }
 
-    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
-        return super.tokenURI(tokenId);
-    }
-
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+    function _burn(uint256 tokenId) internal virtual override {
         super._burn(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 
     function withdraw() public onlyOwner {

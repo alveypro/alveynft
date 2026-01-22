@@ -1,0 +1,49 @@
+.wallet-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  display: grid;
+  gap: 12px;
+}
+
+.wallet-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.wallet-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.wallet-form input {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #ffffff;
+}
+
+.wallet-form button {
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 255, 136, 0.2);
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wallet-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.wallet-chip {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
