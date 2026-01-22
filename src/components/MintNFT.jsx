@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAccount, usePublicClient } from 'wagmi'
-import { decodeEventLog, formatUnits, parseAbiItem } from 'viem'
+import { decodeEventLog, formatUnits, parseAbiItem, toEventSelector } from 'viem'
 import {
   useNFTMint,
   useNFTMintedCount,
@@ -63,6 +63,7 @@ export function MintNFT() {
       parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'),
     []
   )
+  const transferTopic = useMemo(() => toEventSelector(transferEvent), [transferEvent])
 
   const mintedCountNumber = useMemo(() => Number(mintedCount ?? 0), [mintedCount])
   const maxMintsNumber = useMemo(() => Number(maxMints ?? 3), [maxMints])
@@ -122,14 +123,18 @@ export function MintNFT() {
       })
       setPendingHistoryId(historyId)
 
-      const hash = await mintAsync?.({
+      const tx = await mintAsync?.({
         args: [selectedTier, tokenURI]
       })
+
+      const hash = typeof tx === 'string' ? tx : tx?.hash
 
       if (hash && publicClient) {
         const receipt = await publicClient.waitForTransactionReceipt({ hash })
         const transferLog = receipt.logs.find(
-          (log) => log.address?.toLowerCase() === contractAddress?.toLowerCase()
+          (log) =>
+            log.address?.toLowerCase() === contractAddress?.toLowerCase() &&
+            log.topics?.[0]?.toLowerCase() === transferTopic.toLowerCase()
         )
         if (transferLog) {
           const decoded = decodeEventLog({
@@ -141,7 +146,19 @@ export function MintNFT() {
             const tokenId = Number(decoded.args.tokenId)
             setLastTokenId(tokenId)
             updateMintHistory(historyId, { tokenId })
+            return
           }
+        }
+
+        const mintedAfter = await publicClient.readContract({
+          ...NFT_CONFIG,
+          address: contractAddress,
+          functionName: 'totalMinted'
+        })
+        const fallbackId = Number(mintedAfter) - 1
+        if (fallbackId >= 0) {
+          setLastTokenId(fallbackId)
+          updateMintHistory(historyId, { tokenId: fallbackId })
         }
       }
     } catch (uploadError) {
