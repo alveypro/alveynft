@@ -130,7 +130,14 @@ export function MintNFT() {
         args: [selectedTier, tokenURI]
       })
 
-      const hash = typeof tx === 'string' ? tx : tx?.hash
+      const hash =
+        typeof tx === 'string'
+          ? tx
+          : typeof tx?.hash === 'string'
+            ? tx.hash
+            : typeof tx?.hash?.hash === 'string'
+              ? tx.hash.hash
+              : undefined
 
       if (hash && publicClient) {
         const receipt = await publicClient.waitForTransactionReceipt({ hash })

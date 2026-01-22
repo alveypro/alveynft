@@ -51,7 +51,10 @@ export function WalletTokens() {
             ? latestBlock - 200000n
             : 0n
           : parsedFrom
-      const to = parsedTo === null || parsedTo === 'latest' ? 'latest' : parsedTo
+      const to =
+        parsedTo === null || parsedTo === 'latest'
+          ? latestBlock
+          : parsedTo
 
       if (parsedFrom === null) {
         setScanInfo('未填写起始区块，默认扫描最近 200000 区块。')
@@ -60,15 +63,13 @@ export function WalletTokens() {
       const addressTopic = `0x${targetAddress.slice(2).padStart(64, '0')}`
       const chunkSize = 200000n
       let currentFrom = from
-      let currentTo = to
+      const currentTo = to
       const owned = new Set()
 
       while (true) {
         let rangeTo = currentTo
-        if (currentTo !== 'latest') {
-          rangeTo = currentFrom + chunkSize
-          if (rangeTo > currentTo) rangeTo = currentTo
-        }
+        rangeTo = currentFrom + chunkSize
+        if (rangeTo > currentTo) rangeTo = currentTo
 
         const [received, sent] = await Promise.all([
           publicClient.getLogs({
@@ -95,10 +96,6 @@ export function WalletTokens() {
           const tokenId = BigInt(log.topics[3])
           owned.delete(tokenId.toString())
         })
-
-        if (currentTo === 'latest') {
-          break
-        }
 
         if (rangeTo === currentTo) {
           break
