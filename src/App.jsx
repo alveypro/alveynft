@@ -20,7 +20,9 @@ function App() {
   const { address: contractAddress } = useContractAddress()
   const { hasCode: contractReady } = useContractStatus(contractAddress)
   const { data: owner } = useNFTOwner(contractAddress, contractReady)
-  const fallbackOwner = import.meta.env.VITE_OWNER_ADDRESS || ''
+  const fallbackOwner =
+    import.meta.env.VITE_OWNER_ADDRESS ||
+    '0xd0dC6Ff0eA6a27a0a4Ba0002F019d0E1b9666c28'
   const isOwner = useMemo(
     () =>
       Boolean(
