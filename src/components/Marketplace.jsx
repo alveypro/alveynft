@@ -10,6 +10,7 @@ import {
   useMarketBuyListing,
   useMarketCancelAuction,
   useMarketCancelListing,
+  useMarketClaimRewards,
   useMarketCreateAuction,
   useMarketCreateListing,
   useMarketListingCount,
@@ -46,6 +47,7 @@ export function Marketplace() {
   const { write: setApprovalForAll, isLoading: isApprovingNFT } = useNFTSetApprovalForAll(nftAddress)
   const { write: approveToken, isLoading: isApprovingToken } = useERC20Approve(paymentToken)
   const { data: tokenAllowance } = useERC20Allowance(paymentToken, address, marketAddress)
+  const { write: claimRewards, isLoading: isClaiming } = useMarketClaimRewards(marketAddress)
   const { write: createListing, isLoading: isCreatingListing } = useMarketCreateListing(marketAddress)
   const { write: cancelListing } = useMarketCancelListing(marketAddress)
   const { write: buyListing } = useMarketBuyListing(marketAddress)
@@ -67,11 +69,50 @@ export function Marketplace() {
   const [auctionReserve, setAuctionReserve] = useState('')
   const [auctionDuration, setAuctionDuration] = useState('24')
   const [bidValues, setBidValues] = useState({})
+  const [rewardIdsInput, setRewardIdsInput] = useState('')
+  const [pendingRewardTotal, setPendingRewardTotal] = useState('')
+  const [isCheckingRewards, setIsCheckingRewards] = useState(false)
   const hasEnvMarket = Boolean(import.meta.env.VITE_MARKET_ADDRESS)
 
   useEffect(() => {
     setMarketInput(marketAddress || '')
   }, [marketAddress])
+
+  const parseTokenIds = (value) =>
+    value
+      .split(/[\s,]+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .map((entry) => BigInt(entry))
+
+  const handleCheckRewards = async () => {
+    if (!publicClient || !marketAddress || !rewardIdsInput) return
+    setIsCheckingRewards(true)
+    try {
+      const ids = parseTokenIds(rewardIdsInput)
+      let total = 0n
+      for (const id of ids) {
+        const pending = await publicClient.readContract({
+          abi: MARKET_ABI,
+          address: marketAddress,
+          functionName: 'pendingRewards',
+          args: [id]
+        })
+        total += pending
+      }
+      setPendingRewardTotal(formatUnits(total, decimals))
+    } catch {
+      setPendingRewardTotal('0')
+    } finally {
+      setIsCheckingRewards(false)
+    }
+  }
+
+  const handleClaimRewards = () => {
+    if (!rewardIdsInput) return
+    const ids = parseTokenIds(rewardIdsInput)
+    claimRewards?.({ args: [ids] })
+  }
 
   const refreshListings = async () => {
     if (!publicClient || !marketAddress || !marketReady) return
@@ -226,7 +267,7 @@ export function Marketplace() {
       <div className="market-header">
         <div>
           <h3>买卖区 / 竞价区</h3>
-          <p>固定价上架与竞价拍卖，手续费 2.5% 自动分配。</p>
+          <p>固定价上架与竞价拍卖，手续费 10%（8%分红 / 1%销毁 / 1%平台）。</p>
         </div>
         <button className="market-refresh" onClick={() => { refreshListings(); refreshAuctions(); }}>
           刷新
@@ -321,6 +362,27 @@ export function Marketplace() {
                 >
                   {approvalNeeded ? (isApprovingNFT ? '授权中...' : '授权市场合约转移NFT') : '已授权'}
                 </button>
+              </div>
+            </div>
+
+            <div className="market-box">
+              <h4>分红领取</h4>
+              <div className="market-form">
+                <input
+                  type="text"
+                  placeholder="Token ID 列表 (如 1,2,3)"
+                  value={rewardIdsInput}
+                  onChange={(event) => setRewardIdsInput(event.target.value)}
+                />
+                <button onClick={handleCheckRewards} disabled={isCheckingRewards}>
+                  {isCheckingRewards ? '计算中...' : '查看可领取'}
+                </button>
+                <button onClick={handleClaimRewards} disabled={isClaiming || !rewardIdsInput}>
+                  {isClaiming ? '领取中...' : '领取分红'}
+                </button>
+              </div>
+              <div className="market-meta">
+                可领取：{pendingRewardTotal ? `${pendingRewardTotal} ${symbol}` : '--'}
               </div>
             </div>
           </div>

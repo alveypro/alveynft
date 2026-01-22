@@ -2,7 +2,7 @@ import { useContractRead, useContractWrite } from 'wagmi'
 
 export const MARKET_ABI = [
   {
-    "inputs": [{ "internalType": "address", "name": "nft_", "type": "address" }, { "internalType": "address", "name": "paymentToken_", "type": "address" }, { "internalType": "address", "name": "feeRecipient_", "type": "address" }, { "internalType": "uint96", "name": "feeBps_", "type": "uint96" }],
+    "inputs": [{ "internalType": "address", "name": "nft_", "type": "address" }, { "internalType": "address", "name": "paymentToken_", "type": "address" }, { "internalType": "address", "name": "feeRecipient_", "type": "address" }],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -29,9 +29,51 @@ export const MARKET_ABI = [
   },
   {
     "inputs": [],
-    "name": "feeBps",
+    "name": "holdersBps",
     "outputs": [{ "internalType": "uint96", "name": "", "type": "uint96" }],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "burnBps",
+    "outputs": [{ "internalType": "uint96", "name": "", "type": "uint96" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "platformBps",
+    "outputs": [{ "internalType": "uint96", "name": "", "type": "uint96" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "rewardPerWeightStored",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalWeightCached",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
+    "name": "pendingRewards",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256[]", "name": "tokenIds", "type": "uint256[]" }],
+    "name": "claimRewards",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -209,5 +251,13 @@ export function useMarketSettleAuction(marketAddress) {
     abi: MARKET_ABI,
     address: marketAddress,
     functionName: 'settleAuction'
+  })
+}
+
+export function useMarketClaimRewards(marketAddress) {
+  return useContractWrite({
+    abi: MARKET_ABI,
+    address: marketAddress,
+    functionName: 'claimRewards'
   })
 }

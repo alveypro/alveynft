@@ -9,7 +9,6 @@ import './DeployContract.css'
 const DEFAULT_GAS_LIMIT = '12000000'
 const DEFAULT_GAS_PRICE_GWEI = '2'
 const DEFAULT_PAYMENT_TOKEN = '0xfd4680e25e05b3435c7f698668d1ce80d2a9f444'
-const DEFAULT_FEE_BPS = '250'
 const DEFAULT_FEE_RECIPIENT = '0xe9C462352a3Ea3fC2585269A4A1aF40F3700ebCB'
 
 export function DeployMarket() {
@@ -21,7 +20,6 @@ export function DeployMarket() {
   const [nftAddress, setNftAddress] = useState(getContractAddress())
   const [paymentToken, setPaymentToken] = useState(DEFAULT_PAYMENT_TOKEN)
   const [feeRecipient, setFeeRecipient] = useState(DEFAULT_FEE_RECIPIENT)
-  const [feeBps, setFeeBps] = useState(DEFAULT_FEE_BPS)
   const [isDeploying, setIsDeploying] = useState(false)
   const [deployError, setDeployError] = useState('')
   const [contractAddress, setContractAddress] = useState('')
@@ -51,7 +49,7 @@ export function DeployMarket() {
       const hash = await walletClient.deployContract({
         abi: artifact.abi,
         bytecode: artifact.bytecode,
-        args: [nftAddress, paymentToken, feeRecipient, BigInt(feeBps || DEFAULT_FEE_BPS)],
+        args: [nftAddress, paymentToken, feeRecipient],
         gas: gasLimitValue,
         gasPrice: gasPriceValue
       })
@@ -75,7 +73,7 @@ export function DeployMarket() {
       <div className="deploy-header">
         <div>
           <h3>部署市场合约</h3>
-          <p>固定价 + 竞价拍卖，手续费 2.5%。</p>
+          <p>固定价 + 竞价拍卖，手续费 10%（8%分红/1%销毁/1%平台）。</p>
         </div>
       </div>
       <div className="deploy-form">
@@ -96,19 +94,11 @@ export function DeployMarket() {
           />
         </label>
         <label>
-          <span>手续费接收地址</span>
+          <span>平台手续费接收地址 (1%)</span>
           <input
             type="text"
             value={feeRecipient}
             onChange={(event) => setFeeRecipient(event.target.value)}
-          />
-        </label>
-        <label>
-          <span>手续费 BPS (2.5% = 250)</span>
-          <input
-            type="number"
-            value={feeBps}
-            onChange={(event) => setFeeBps(event.target.value)}
           />
         </label>
         <label>

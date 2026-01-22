@@ -6,9 +6,11 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
-interface IERC721 {
+interface INFT {
     function ownerOf(uint256 tokenId) external view returns (address);
     function safeTransferFrom(address from, address to, uint256 tokenId) external;
+    function tokenTier(uint256 tokenId) external view returns (uint8);
+    function tierMinted(uint8 tier) external view returns (uint256);
 }
 
 interface IERC721Receiver {
@@ -25,7 +27,11 @@ contract AlveyMarketplace is IERC721Receiver {
     address public immutable nft;
     IERC20 public immutable paymentToken;
     address public feeRecipient;
-    uint96 public feeBps;
+
+    uint96 public holdersBps = 800;
+    uint96 public burnBps = 100;
+    uint96 public platformBps = 100;
+    address public constant DEAD = 0x000000000000000000000000000000000000dEaD;
 
     uint64 public minAuctionDuration = 1 hours;
     uint64 public extensionWindow = 10 minutes;
@@ -33,6 +39,15 @@ contract AlveyMarketplace is IERC721Receiver {
 
     uint256 public listingCount;
     uint256 public auctionCount;
+
+    uint256 public rewardPerWeightStored;
+    uint256 public totalWeightCached;
+    uint64 public lastWeightSync;
+
+    mapping(uint256 => uint256) public rewardPerWeightPaid;
+    mapping(uint256 => uint256) public accruedRewards;
+
+    uint256 private _locked;
 
     struct Listing {
         address seller;
@@ -54,8 +69,6 @@ contract AlveyMarketplace is IERC721Receiver {
     mapping(uint256 => Listing) public listings;
     mapping(uint256 => Auction) public auctions;
 
-    uint256 private _locked;
-
     event ListingCreated(uint256 indexed listingId, address indexed seller, uint256 indexed tokenId, uint256 price);
     event ListingCancelled(uint256 indexed listingId);
     event ListingFilled(uint256 indexed listingId, address indexed buyer, uint256 price);
@@ -64,6 +77,11 @@ contract AlveyMarketplace is IERC721Receiver {
     event BidPlaced(uint256 indexed auctionId, address indexed bidder, uint256 amount, uint64 endTime);
     event AuctionCancelled(uint256 indexed auctionId);
     event AuctionSettled(uint256 indexed auctionId, address indexed winner, uint256 amount);
+
+    event RewardsAdded(uint256 amount, uint256 rewardPerWeight);
+    event RewardsClaimed(address indexed account, uint256 amount);
+    event FeeRecipientUpdated(address indexed recipient);
+    event FeeSplitUpdated(uint96 holdersBps, uint96 burnBps, uint96 platformBps);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
@@ -77,16 +95,14 @@ contract AlveyMarketplace is IERC721Receiver {
         _locked = 0;
     }
 
-    constructor(address nft_, address paymentToken_, address feeRecipient_, uint96 feeBps_) {
+    constructor(address nft_, address paymentToken_, address feeRecipient_) {
         require(nft_ != address(0), "Invalid NFT");
         require(paymentToken_ != address(0), "Invalid token");
         require(feeRecipient_ != address(0), "Invalid fee recipient");
-        require(feeBps_ <= 1000, "Fee too high");
         owner = msg.sender;
         nft = nft_;
         paymentToken = IERC20(paymentToken_);
         feeRecipient = feeRecipient_;
-        feeBps = feeBps_;
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
@@ -97,11 +113,15 @@ contract AlveyMarketplace is IERC721Receiver {
     function setFeeRecipient(address recipient) external onlyOwner {
         require(recipient != address(0), "Invalid recipient");
         feeRecipient = recipient;
+        emit FeeRecipientUpdated(recipient);
     }
 
-    function setFeeBps(uint96 bps) external onlyOwner {
-        require(bps <= 1000, "Fee too high");
-        feeBps = bps;
+    function setFeeSplit(uint96 holders, uint96 burn, uint96 platform) external onlyOwner {
+        require(holders + burn + platform == 1000, "Split must be 10%");
+        holdersBps = holders;
+        burnBps = burn;
+        platformBps = platform;
+        emit FeeSplitUpdated(holders, burn, platform);
     }
 
     function setAuctionParams(uint64 minDuration, uint64 window, uint64 extension) external onlyOwner {
@@ -111,9 +131,60 @@ contract AlveyMarketplace is IERC721Receiver {
         extensionDuration = extension;
     }
 
+    function _syncWeights() internal returns (uint256 totalWeight) {
+        totalWeight = 0;
+        for (uint8 i = 0; i < 8; i++) {
+            uint256 minted = INFT(nft).tierMinted(i);
+            totalWeight += minted * (uint256(i) + 1);
+        }
+        totalWeightCached = totalWeight;
+        lastWeightSync = uint64(block.timestamp);
+    }
+
+    function _updateRewards(uint256 amount) internal {
+        if (amount == 0) return;
+        uint256 totalWeight = _syncWeights();
+        if (totalWeight == 0) return;
+        rewardPerWeightStored += (amount * 1e18) / totalWeight;
+        emit RewardsAdded(amount, rewardPerWeightStored);
+    }
+
+    function _accrue(uint256 tokenId) internal {
+        uint256 paid = rewardPerWeightPaid[tokenId];
+        if (rewardPerWeightStored == paid) return;
+        uint256 weight = uint256(INFT(nft).tokenTier(tokenId)) + 1;
+        uint256 pending = ((rewardPerWeightStored - paid) * weight) / 1e18;
+        accruedRewards[tokenId] += pending;
+        rewardPerWeightPaid[tokenId] = rewardPerWeightStored;
+    }
+
+    function pendingRewards(uint256 tokenId) public view returns (uint256) {
+        uint256 paid = rewardPerWeightPaid[tokenId];
+        uint256 weight = uint256(INFT(nft).tokenTier(tokenId)) + 1;
+        uint256 pending = ((rewardPerWeightStored - paid) * weight) / 1e18;
+        return accruedRewards[tokenId] + pending;
+    }
+
+    function claimRewards(uint256[] calldata tokenIds) external nonReentrant {
+        uint256 total;
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+            require(INFT(nft).ownerOf(tokenId) == msg.sender, "Not owner");
+            _accrue(tokenId);
+            uint256 reward = accruedRewards[tokenId];
+            if (reward > 0) {
+                accruedRewards[tokenId] = 0;
+                total += reward;
+            }
+        }
+        require(total > 0, "No rewards");
+        require(paymentToken.transfer(msg.sender, total), "Reward transfer failed");
+        emit RewardsClaimed(msg.sender, total);
+    }
+
     function createListing(uint256 tokenId, uint256 price) external nonReentrant {
         require(price > 0, "Invalid price");
-        require(IERC721(nft).ownerOf(tokenId) == msg.sender, "Not owner");
+        require(INFT(nft).ownerOf(tokenId) == msg.sender, "Not owner");
 
         listingCount++;
         listings[listingCount] = Listing({
@@ -123,7 +194,7 @@ contract AlveyMarketplace is IERC721Receiver {
             active: true
         });
 
-        IERC721(nft).safeTransferFrom(msg.sender, address(this), tokenId);
+        INFT(nft).safeTransferFrom(msg.sender, address(this), tokenId);
         emit ListingCreated(listingCount, msg.sender, tokenId, price);
     }
 
@@ -133,7 +204,7 @@ contract AlveyMarketplace is IERC721Receiver {
         require(listing.seller == msg.sender, "Not seller");
         listing.active = false;
 
-        IERC721(nft).safeTransferFrom(address(this), msg.sender, listing.tokenId);
+        INFT(nft).safeTransferFrom(address(this), msg.sender, listing.tokenId);
         emit ListingCancelled(listingId);
     }
 
@@ -142,22 +213,31 @@ contract AlveyMarketplace is IERC721Receiver {
         require(listing.active, "Inactive");
         listing.active = false;
 
-        uint256 fee = (listing.price * feeBps) / 10000;
-        uint256 payout = listing.price - fee;
+        uint256 holdersFee = (listing.price * holdersBps) / 10000;
+        uint256 burnFee = (listing.price * burnBps) / 10000;
+        uint256 platformFee = (listing.price * platformBps) / 10000;
+        uint256 payout = listing.price - holdersFee - burnFee - platformFee;
 
         require(paymentToken.transferFrom(msg.sender, listing.seller, payout), "Pay seller failed");
-        if (fee > 0) {
-            require(paymentToken.transferFrom(msg.sender, feeRecipient, fee), "Pay fee failed");
+        if (platformFee > 0) {
+            require(paymentToken.transferFrom(msg.sender, feeRecipient, platformFee), "Pay platform failed");
+        }
+        if (burnFee > 0) {
+            require(paymentToken.transferFrom(msg.sender, DEAD, burnFee), "Burn failed");
+        }
+        if (holdersFee > 0) {
+            require(paymentToken.transferFrom(msg.sender, address(this), holdersFee), "Pay holders failed");
+            _updateRewards(holdersFee);
         }
 
-        IERC721(nft).safeTransferFrom(address(this), msg.sender, listing.tokenId);
+        INFT(nft).safeTransferFrom(address(this), msg.sender, listing.tokenId);
         emit ListingFilled(listingId, msg.sender, listing.price);
     }
 
     function createAuction(uint256 tokenId, uint256 reservePrice, uint64 duration) external nonReentrant {
         require(reservePrice > 0, "Invalid reserve");
         require(duration >= minAuctionDuration, "Short duration");
-        require(IERC721(nft).ownerOf(tokenId) == msg.sender, "Not owner");
+        require(INFT(nft).ownerOf(tokenId) == msg.sender, "Not owner");
 
         auctionCount++;
         uint64 endTime = uint64(block.timestamp) + duration;
@@ -171,7 +251,7 @@ contract AlveyMarketplace is IERC721Receiver {
             settled: false
         });
 
-        IERC721(nft).safeTransferFrom(msg.sender, address(this), tokenId);
+        INFT(nft).safeTransferFrom(msg.sender, address(this), tokenId);
         emit AuctionCreated(auctionCount, msg.sender, tokenId, reservePrice, endTime);
     }
 
@@ -205,7 +285,7 @@ contract AlveyMarketplace is IERC721Receiver {
         require(auction.highestBidder == address(0), "Has bid");
         auction.settled = true;
 
-        IERC721(nft).safeTransferFrom(address(this), msg.sender, auction.tokenId);
+        INFT(nft).safeTransferFrom(address(this), msg.sender, auction.tokenId);
         emit AuctionCancelled(auctionId);
     }
 
@@ -216,20 +296,28 @@ contract AlveyMarketplace is IERC721Receiver {
         auction.settled = true;
 
         if (auction.highestBidder == address(0)) {
-            IERC721(nft).safeTransferFrom(address(this), auction.seller, auction.tokenId);
+            INFT(nft).safeTransferFrom(address(this), auction.seller, auction.tokenId);
             emit AuctionSettled(auctionId, address(0), 0);
             return;
         }
 
-        uint256 fee = (auction.highestBid * feeBps) / 10000;
-        uint256 payout = auction.highestBid - fee;
+        uint256 holdersFee = (auction.highestBid * holdersBps) / 10000;
+        uint256 burnFee = (auction.highestBid * burnBps) / 10000;
+        uint256 platformFee = (auction.highestBid * platformBps) / 10000;
+        uint256 payout = auction.highestBid - holdersFee - burnFee - platformFee;
 
         require(paymentToken.transfer(auction.seller, payout), "Pay seller failed");
-        if (fee > 0) {
-            require(paymentToken.transfer(feeRecipient, fee), "Pay fee failed");
+        if (platformFee > 0) {
+            require(paymentToken.transfer(feeRecipient, platformFee), "Pay platform failed");
+        }
+        if (burnFee > 0) {
+            require(paymentToken.transfer(DEAD, burnFee), "Burn failed");
+        }
+        if (holdersFee > 0) {
+            _updateRewards(holdersFee);
         }
 
-        IERC721(nft).safeTransferFrom(address(this), auction.highestBidder, auction.tokenId);
+        INFT(nft).safeTransferFrom(address(this), auction.highestBidder, auction.tokenId);
         emit AuctionSettled(auctionId, auction.highestBidder, auction.highestBid);
     }
 
