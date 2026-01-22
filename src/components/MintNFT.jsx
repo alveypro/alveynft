@@ -18,6 +18,7 @@ import { useContractAddress, useContractStatus } from '../services/contractAddre
 import { useERC20Allowance, useERC20Approve, useERC20Balance, useERC20Decimals, useERC20Symbol } from '../services/erc20Service'
 import { createTokenUri } from '../services/ipfsService'
 import { addMintHistory, updateMintHistory } from '../services/mintHistory'
+import { getTokenExplorerUrl } from '../services/explorer'
 import './MintNFT.css'
 
 const TIERS = Array.from({ length: 8 }, (_, index) => ({
@@ -55,6 +56,7 @@ export function MintNFT() {
   const [metadataError, setMetadataError] = useState('')
   const [pendingHistoryId, setPendingHistoryId] = useState('')
   const [lastTokenId, setLastTokenId] = useState(null)
+  const [copyStatus, setCopyStatus] = useState('')
 
   const transferEvent = useMemo(
     () =>
@@ -97,6 +99,7 @@ export function MintNFT() {
     if (!canMint) return
 
     try {
+      setCopyStatus('')
       setMetadataStatus('正在生成并上传元数据...')
       setMetadataError('')
       const tokenURI = await createTokenUri({
@@ -159,6 +162,17 @@ export function MintNFT() {
       setPendingHistoryId('')
     }
   }, [isSuccess, isError, pendingHistoryId, error])
+
+  const handleCopy = async (value) => {
+    if (!value) return
+    try {
+      await navigator.clipboard.writeText(String(value))
+      setCopyStatus('已复制 Token ID')
+      setTimeout(() => setCopyStatus(''), 2000)
+    } catch {
+      setCopyStatus('复制失败，请手动复制')
+    }
+  }
 
   return (
     <div className="mint-container">
@@ -285,8 +299,28 @@ export function MintNFT() {
       {isSuccess && <div className="message success-message">铸造成功！</div>}
       {isError && <div className="message error-message">{error?.message || '铸造失败'}</div>}
       {lastTokenId !== null && (
-        <div className="message success-message">你的 Token ID: #{lastTokenId}</div>
+        <div className="message success-message">
+          你的 Token ID: #{lastTokenId}
+          <button
+            type="button"
+            className="inline-button"
+            onClick={() => handleCopy(lastTokenId)}
+          >
+            复制
+          </button>
+          {contractAddress && (
+            <a
+              className="inline-link"
+              href={getTokenExplorerUrl(contractAddress, lastTokenId)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              区块浏览器查看
+            </a>
+          )}
+        </div>
       )}
+      {copyStatus && <div className="message info-message">{copyStatus}</div>}
     </div>
   )
 }

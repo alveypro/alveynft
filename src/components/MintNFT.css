@@ -142,6 +142,24 @@
   color: #00b8ff;
 }
 
+.inline-button {
+  margin-left: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  padding: 2px 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.inline-link {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #00b8ff;
+  text-decoration: none;
+}
+
 /* 移动端适配 */
 @media screen and (max-width: 768px) {
   .mint-container {

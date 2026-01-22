@@ -3,6 +3,7 @@ import { useAccount, usePublicClient } from 'wagmi'
 import { useContractAddress, useContractStatus } from '../services/contractAddress'
 import { NFT_CONFIG, useNFTTransfer } from '../services/nftService'
 import { toGatewayUrl } from '../services/ipfsService'
+import { getTokenExplorerUrl } from '../services/explorer'
 import './MyCollection.css'
 
 function decodeDataUri(uri) {
@@ -38,6 +39,7 @@ export function MyCollection() {
   const [isLoading, setIsLoading] = useState(false)
   const [transferTargets, setTransferTargets] = useState({})
   const [transferStatus, setTransferStatus] = useState({})
+  const [copyStatus, setCopyStatus] = useState('')
 
   const range = useMemo(() => {
     const start = Number(startId)
@@ -117,6 +119,17 @@ export function MyCollection() {
     }
   }
 
+  const handleCopy = async (tokenId) => {
+    if (tokenId === undefined || tokenId === null) return
+    try {
+      await navigator.clipboard.writeText(String(tokenId))
+      setCopyStatus(`Token #${tokenId} 已复制`)
+      setTimeout(() => setCopyStatus(''), 2000)
+    } catch {
+      setCopyStatus('复制失败，请手动复制')
+    }
+  }
+
   if (!contractAddress) return null
 
   return (
@@ -148,7 +161,24 @@ export function MyCollection() {
             </div>
             <div className="collection-info">
               <div className="collection-title">{item.name}</div>
-              <div className="collection-meta">Token #{item.tokenId}</div>
+              <div className="collection-meta">
+                Token #{item.tokenId}
+                <button
+                  type="button"
+                  className="collection-copy"
+                  onClick={() => handleCopy(item.tokenId)}
+                >
+                  复制
+                </button>
+                <a
+                  className="collection-link"
+                  href={getTokenExplorerUrl(contractAddress, item.tokenId)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  浏览器查看
+                </a>
+              </div>
               {item.tokenTier && <div className="collection-meta">Tier {item.tokenTier}</div>}
               {item.tokenURI && (
                 <a
@@ -175,13 +205,14 @@ export function MyCollection() {
                   {isTransferring ? '处理中...' : '转移'}
                 </button>
               </div>
-              {transferStatus[item.tokenId] && (
-                <div className="collection-status">{transferStatus[item.tokenId]}</div>
-              )}
-            </div>
+            {transferStatus[item.tokenId] && (
+              <div className="collection-status">{transferStatus[item.tokenId]}</div>
+            )}
           </div>
-        ))}
+        </div>
+      ))}
       </div>
+      {copyStatus && <div className="collection-status">{copyStatus}</div>}
     </section>
   )
 }
