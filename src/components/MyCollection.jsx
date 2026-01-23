@@ -156,6 +156,7 @@ export function MyCollection() {
           <div key={item.tokenId} className="collection-item">
             <div className="collection-image">
               <img src={item.image || DEFAULT_NFT_IMAGE} alt={item.name} />
+              {item.tokenTier && <span className="nft-badge">Tier {item.tokenTier}</span>}
             </div>
             <div className="collection-info">
               <div className="collection-title">{item.name}</div>

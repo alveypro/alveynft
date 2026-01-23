@@ -201,6 +201,7 @@ export function WalletTokens() {
             <div key={item.tokenId} className="wallet-item">
               <div className="wallet-image">
                 <img src={item.image || DEFAULT_NFT_IMAGE} alt={item.name} />
+                <span className="nft-badge">{item.tierLabel}</span>
               </div>
               <div className="wallet-info">
                 <div className="wallet-title">{item.name}</div>

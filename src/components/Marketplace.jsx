@@ -399,6 +399,7 @@ export function Marketplace() {
                       <div key={item.id} className="market-item">
                         <div className="market-image">
                           <img src={item.image} alt={item.name} />
+                          <span className="nft-badge">{item.tierLabel}</span>
                         </div>
                         <div className="market-info">
                           <div className="market-title">{item.name}</div>
@@ -449,6 +450,7 @@ export function Marketplace() {
                       <div key={item.id} className="market-item">
                         <div className="market-image">
                           <img src={item.image} alt={item.name} />
+                          <span className="nft-badge">{item.tierLabel}</span>
                         </div>
                         <div className="market-info">
                           <div className="market-title">{item.name}</div>

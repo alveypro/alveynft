@@ -92,10 +92,15 @@ export function ExploreNFT() {
           {metadataError && <div className="explore-error">{metadataError}</div>}
           {metadata && (
             <div className="explore-preview">
-              <img
-                src={metadata.image ? toGatewayUrl(metadata.image) : DEFAULT_NFT_IMAGE}
-                alt={metadata.name || 'NFT'}
-              />
+              <div className="explore-image">
+                <img
+                  src={metadata.image ? toGatewayUrl(metadata.image) : DEFAULT_NFT_IMAGE}
+                  alt={metadata.name || 'NFT'}
+                />
+                {tokenTier !== undefined && (
+                  <span className="nft-badge">Tier {Number(tokenTier) + 1}</span>
+                )}
+              </div>
               <div className="explore-meta">
                 <div>{metadata.name}</div>
                 <div className="explore-desc">{metadata.description}</div>
