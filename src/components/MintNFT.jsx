@@ -147,8 +147,8 @@ export function MintNFT() {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
     ctx.lineWidth = Math.max(2, Math.floor(width * 0.002))
     const badgeWidth = Math.max(160, Math.floor(width * 0.28))
-    const x = padding
-    const y = padding
+    const x = Math.floor((width - badgeWidth) / 2)
+    const y = Math.floor((height - badgeHeight) / 2)
     const radius = Math.max(16, Math.floor(badgeHeight / 2))
     ctx.beginPath()
     ctx.moveTo(x + radius, y)
