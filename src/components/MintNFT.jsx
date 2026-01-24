@@ -53,6 +53,7 @@ export function MintNFT() {
   const [imageUrl, setImageUrl] = useState('')
   const [imageFile, setImageFile] = useState(null)
   const [useGateway, setUseGateway] = useState(true)
+  const [embedTierBadge, setEmbedTierBadge] = useState(true)
   const [metadataStatus, setMetadataStatus] = useState('')
   const [metadataError, setMetadataError] = useState('')
   const [pendingHistoryId, setPendingHistoryId] = useState('')
@@ -100,6 +101,104 @@ export function MintNFT() {
     salePhaseNumber !== 0 &&
     (!allowlistRequired || Boolean(isAllowlisted))
 
+  const loadImageFromBlob = (blob) =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob)
+      const img = new Image()
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        resolve(img)
+      }
+      img.onerror = (err) => {
+        URL.revokeObjectURL(url)
+        reject(err)
+      }
+      img.src = url
+    })
+
+  const loadImageFromUrl = async (url) => {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error('加载图片失败')
+    const blob = await response.blob()
+    return loadImageFromBlob(blob)
+  }
+
+  const readFileAsDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = (err) => reject(err)
+      reader.readAsDataURL(file)
+    })
+
+  const renderBadge = async (sourceImage, badgeText) => {
+    const canvas = document.createElement('canvas')
+    const width = sourceImage.naturalWidth || 1024
+    const height = sourceImage.naturalHeight || 1024
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('无法生成图片')
+
+    ctx.drawImage(sourceImage, 0, 0, width, height)
+    const padding = Math.max(16, Math.floor(width * 0.02))
+    const badgeHeight = Math.max(40, Math.floor(height * 0.08))
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
+    ctx.lineWidth = Math.max(2, Math.floor(width * 0.002))
+    const badgeWidth = Math.max(160, Math.floor(width * 0.28))
+    const x = padding
+    const y = padding
+    const radius = Math.max(16, Math.floor(badgeHeight / 2))
+    ctx.beginPath()
+    ctx.moveTo(x + radius, y)
+    ctx.lineTo(x + badgeWidth - radius, y)
+    ctx.quadraticCurveTo(x + badgeWidth, y, x + badgeWidth, y + radius)
+    ctx.lineTo(x + badgeWidth, y + badgeHeight - radius)
+    ctx.quadraticCurveTo(x + badgeWidth, y + badgeHeight, x + badgeWidth - radius, y + badgeHeight)
+    ctx.lineTo(x + radius, y + badgeHeight)
+    ctx.quadraticCurveTo(x, y + badgeHeight, x, y + badgeHeight - radius)
+    ctx.lineTo(x, y + radius)
+    ctx.quadraticCurveTo(x, y, x + radius, y)
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
+
+    ctx.fillStyle = '#ffffff'
+    ctx.font = `600 ${Math.max(18, Math.floor(badgeHeight * 0.5))}px Arial`
+    ctx.textBaseline = 'middle'
+    ctx.fillText(badgeText, x + padding, y + badgeHeight / 2)
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), 'image/png')
+    })
+  }
+
+  const buildTierImageFile = async () => {
+    const badgeText = `Tier ${selectedTier + 1}`
+    try {
+      if (imageFile) {
+        const dataUrl = await readFileAsDataUrl(imageFile)
+        const img = new Image()
+        img.src = dataUrl
+        await new Promise((resolve, reject) => {
+          img.onload = resolve
+          img.onerror = reject
+        })
+        const blob = await renderBadge(img, badgeText)
+        if (blob) return new File([blob], `tier-${selectedTier + 1}.png`, { type: 'image/png' })
+      }
+      if (imageUrl) {
+        const img = await loadImageFromUrl(imageUrl)
+        const blob = await renderBadge(img, badgeText)
+        if (blob) return new File([blob], `tier-${selectedTier + 1}.png`, { type: 'image/png' })
+      }
+    } catch {
+      return null
+    }
+    return null
+  }
+
   const handleMint = async () => {
     if (!canMint) return
 
@@ -107,11 +206,21 @@ export function MintNFT() {
       setCopyStatus('')
       setMetadataStatus('正在生成并上传元数据...')
       setMetadataError('')
+      let finalImageFile = imageFile
+      let finalImageUrl = imageUrl
+      if (embedTierBadge) {
+        setMetadataStatus('正在生成带 Tier 徽标的图片...')
+        const tierFile = await buildTierImageFile()
+        if (tierFile) {
+          finalImageFile = tierFile
+          finalImageUrl = ''
+        }
+      }
       const tokenURI = await createTokenUri({
         name,
         description,
-        imageUrl,
-        imageFile,
+        imageUrl: finalImageUrl,
+        imageFile: finalImageFile,
         attributes: [
           { trait_type: 'Tier', value: `Tier ${selectedTier + 1}` },
           { trait_type: 'Price', value: priceLabel }
@@ -253,6 +362,14 @@ export function MintNFT() {
             accept="image/*"
             onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
           />
+        </label>
+        <label className="form-checkbox">
+          <input
+            type="checkbox"
+            checked={embedTierBadge}
+            onChange={(event) => setEmbedTierBadge(event.target.checked)}
+          />
+          铸造时把 Tier 徽标直接写进图片（钱包可见）
         </label>
         <label className="form-checkbox">
           <input
