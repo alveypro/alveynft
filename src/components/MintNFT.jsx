@@ -140,15 +140,26 @@ export function MintNFT() {
     const ctx = canvas.getContext('2d')
     if (!ctx) throw new Error('无法生成图片')
 
-    ctx.drawImage(sourceImage, 0, 0, width, height)
+    const safePadding = Math.max(24, Math.floor(width * 0.08))
+    ctx.fillStyle = '#0b0f14'
+    ctx.fillRect(0, 0, width, height)
+    const maxW = width - safePadding * 2
+    const maxH = height - safePadding * 2
+    const scale = Math.min(maxW / sourceImage.naturalWidth, maxH / sourceImage.naturalHeight)
+    const drawW = Math.floor(sourceImage.naturalWidth * scale)
+    const drawH = Math.floor(sourceImage.naturalHeight * scale)
+    const drawX = Math.floor((width - drawW) / 2)
+    const drawY = Math.floor((height - drawH) / 2)
+    ctx.drawImage(sourceImage, drawX, drawY, drawW, drawH)
+
     const padding = Math.max(16, Math.floor(width * 0.02))
     const badgeHeight = Math.max(40, Math.floor(height * 0.08))
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)'
     ctx.lineWidth = Math.max(2, Math.floor(width * 0.002))
     const badgeWidth = Math.max(160, Math.floor(width * 0.28))
-    const x = Math.floor((width - badgeWidth) / 2)
-    const y = Math.floor((height - badgeHeight) / 2)
+    const x = safePadding
+    const y = safePadding
     const radius = Math.max(16, Math.floor(badgeHeight / 2))
     ctx.beginPath()
     ctx.moveTo(x + radius, y)
